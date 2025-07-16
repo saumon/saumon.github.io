@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saumon</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        #water-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .saumon {
+            position: absolute;
+            font-size: 50px;
+            font-family: 'Arial', sans-serif;
+            color: #FF5733;
+            z-index: 1;
+            animation: move 10s infinite alternate,
+                         resize 8s infinite alternate,
+                         colorize 12s infinite alternate;
+        }
+
+        @keyframes move {
+            0% { left: 10vw; top: 10vh; }
+            25% { left: 80vw; top: 50vh; }
+            50% { left: 20vw; top: 80vh; }
+            75% { left: 50vw; top: 20vh; }
+            100% { left: 10vw; top: 10vh; }
+        }
+
+        @keyframes resize {
+            0% { font-size: 20px; }
+            50% { font-size: 100px; }
+            100% { font-size: 20px; }
+        }
+
+        @keyframes colorize {
+            0% { color: #FF5733; }
+            25% { color: #FFC300; }
+            50% { color: #DAF7A6; }
+            75% { color: #C70039; }
+            100% { color: #900C3F; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="water-bg"></canvas>
+    <span class="saumon">saumon</span>
+
+    <script>
+        const canvas = document.getElementById('water-bg');
+        const ctx = canvas.getContext('2d');
+
+        const pixelSize = 5;
+        let cols, rows;
+        let buffer1, buffer2;
+        let damping = 0.99;
+
+        function setup() {
+            cols = Math.ceil(window.innerWidth / pixelSize);
+            rows = Math.ceil(window.innerHeight / pixelSize);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            buffer1 = Array(rows).fill(0).map(() => Array(cols).fill(0));
+            buffer2 = Array(rows).fill(0).map(() => Array(cols).fill(0));
+        }
+
+        function disturb() {
+            const x = Math.floor(Math.random() * cols);
+            const y = Math.floor(Math.random() * rows);
+            buffer1[y][x] = 2000;
+        }
+
+        function update() {
+            for (let y = 1; y < rows - 1; y++) {
+                for (let x = 1; x < cols - 1; x++) {
+                    buffer2[y][x] =
+                        ((buffer1[y - 1][x] +
+                          buffer1[y + 1][x] +
+                          buffer1[y][x - 1] +
+                          buffer1[y][x + 1]) / 2) - buffer2[y][x];
+                    buffer2[y][x] *= damping;
+                }
+            }
+
+            let temp = buffer1;
+            buffer1 = buffer2;
+            buffer2 = temp;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const value = buffer1[y][x];
+                    const blue = 150 + value;
+                    const lightBlue = 200 + value;
+                    ctx.fillStyle = `rgb(0, ${blue}, ${lightBlue})`;
+                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+
+        let lastFrameTime = 0;
+        const frameInterval = 50; // approx 20 FPS
+
+        function animate(currentTime) {
+            requestAnimationFrame(animate);
+            if (currentTime - lastFrameTime < frameInterval) {
+                return;
+            }
+            lastFrameTime = currentTime;
+
+            update();
+            draw();
+            if (Math.random() < 0.1) {
+                disturb();
+            }
+        }
+
+        window.addEventListener('resize', setup);
+        setup();
+        animate(0);
+
+    </script>
+</body>
+</html>
