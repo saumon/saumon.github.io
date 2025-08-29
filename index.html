@@ -1,140 +1,1393 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>saumon</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍣</text></svg>">
+    <title>saumon@terminal</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
     <style>
-        body, html {
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
+            box-sizing: border-box;
         }
-        #water-bg {
+
+        body, html {
+            height: 100%;
+            background: #000;
+            color: #9fff9f;
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            filter: contrast(1.2) brightness(1.1);
+            text-shadow: 0 0 5px #9fff9f, 0 0 10px #9fff9f, 0 0 15px #9fff9f;
+        }
+
+        .terminal {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            background: #000;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            filter: blur(0.3px);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        .terminal::-webkit-scrollbar {
+            display: none; /* Safari et Chrome */
+        }
+
+        .command-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-left: 15px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        .command-history::-webkit-scrollbar {
+            display: none; /* Safari et Chrome */
+        }
+
+        .command-line {
+            margin: 5px 0;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .command-output {
+            color: #9fff9f;
+            margin: 2px 0;
+            font-style: italic;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: auto;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .command-input {
+            background: transparent;
+            border: none;
+            color: #9fff9f;
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+            caret-color: transparent;
+            padding-left: 15px; /* Espace pour le curseur */
+            text-transform: uppercase;
+        }
+
+        .command-input:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .terminal::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(159, 255, 159, 0.03) 2px,
+                rgba(159, 255, 159, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .terminal::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.3) 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 1px,
+                    rgba(255, 255, 255, 0.02) 1px,
+                    rgba(255, 255, 255, 0.02) 2px
+                );
+            pointer-events: none;
+            z-index: 1001;
+            animation: crt-flicker 0.15s infinite linear alternate;
+        }
+
+        /* Couche de bruit supplémentaire */
+        .crt-screen::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(159, 255, 159, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(159, 255, 159, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(159, 255, 159, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 999;
+            animation: noise-move 2s infinite linear;
+        }
+
+        @keyframes noise-move {
+            0% { transform: translate(0px, 0px); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, -2px); }
+            100% { transform: translate(0px, 0px); }
+        }
+
+        .static-noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            pointer-events: none;
+            z-index: 1002;
+            opacity: 0.08; /* Augmenté de 0.03 à 0.08 */
+        }
+
+        .static-noise::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    rgba(255, 255, 255, 0.1) 1px,
+                    transparent 2px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    rgba(255, 255, 255, 0.05) 1px,
+                    transparent 3px
+                );
+            animation: static-drift 0.1s infinite linear;
+        }
+
+        @keyframes static-drift {
+            0% { transform: translate(0px, 0px) rotate(0deg); }
+            100% { transform: translate(-10px, -10px) rotate(0.5deg); }
+        }
+
+        /* Effet de brouillage analogique */
+        .snow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1003;
+            opacity: 0.15; /* Augmenté de 0.06 à 0.15 */
+            mix-blend-mode: screen;
+        }
+
+        .snow-overlay::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            animation: analog-noise 0.06s infinite steps(15); /* Plus rapide et plus d'étapes */
+        }
+
+        @keyframes analog-noise {
+            0% { transform: translate(0px, 0px); opacity: 0.5; }
+            6.66% { transform: translate(-1.5px, 1px); opacity: 0.9; }
+            13.33% { transform: translate(1px, -1.5px); opacity: 0.3; }
+            20% { transform: translate(-1px, -1px); opacity: 1.0; }
+            26.66% { transform: translate(1.5px, 1px); opacity: 0.6; }
+            33.33% { transform: translate(-1px, 0px); opacity: 0.8; }
+            40% { transform: translate(1px, 0px); opacity: 0.4; }
+            46.66% { transform: translate(0px, -1.5px); opacity: 0.9; }
+            53.33% { transform: translate(0px, 1px); opacity: 0.7; }
+            60% { transform: translate(-1.5px, 1px); opacity: 1.0; }
+            66.66% { transform: translate(1px, -1px); opacity: 0.4; }
+            73.33% { transform: translate(-0.5px, 0.5px); opacity: 0.8; }
+            80% { transform: translate(0.5px, -0.5px); opacity: 0.6; }
+            86.66% { transform: translate(-1px, 1.5px); opacity: 0.9; }
+            93.33% { transform: translate(1px, -0.5px); opacity: 0.5; }
+            100% { transform: translate(0px, 0px); opacity: 0.7; }
+        }
+
+        /* Lignes d'interférence horizontales ondulantes */
+        .interference-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                0deg,
+                transparent 98%,
+                rgba(255, 255, 255, 0.06) 98.5%,
+                rgba(255, 255, 255, 0.12) 99%,
+                rgba(255, 255, 255, 0.06) 99.5%,
+                transparent 100%
+            );
+            background-size: 100% 8px;
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1004;
+            animation: interference-roll 3.2s infinite linear,
+                       interference-wave 1.1s infinite ease-in-out;
+        }
+
+        @keyframes interference-roll {
+            0% { transform: translateY(-8px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes interference-wave {
+            0% { 
+                opacity: 0.8; 
+                filter: blur(0px);
+                transform: scaleX(1);
+            }
+            25% { 
+                opacity: 0.9; 
+                filter: blur(0.2px);
+                transform: scaleX(1.01);
+            }
+            50% { 
+                opacity: 0.7; 
+                filter: blur(0px);
+                transform: scaleX(0.99);
+            }
+            75% { 
+                opacity: 0.85; 
+                filter: blur(0.1px);
+                transform: scaleX(1.005);
+            }
+            100% { 
+                opacity: 0.8; 
+                filter: blur(0px);
+                transform: scaleX(1);
+            }
+        }
+
+        @keyframes crt-flicker {
+            0% {
+                opacity: 1;
+            }
+            98% {
+                opacity: 1;
+            }
+            99% {
+                opacity: 0.98;
+            }
+            100% {
+                opacity: 0.99;
+            }
+        }
+
+        .crt-screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 50px rgba(159, 255, 159, 0.1),
+                0 0 100px rgba(0, 0, 0, 0.8);
+            background: radial-gradient(ellipse at center, #001100 0%, #000000 100%);
+        }
+
+        .crt-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(159, 255, 159, 0.02), rgba(159, 255, 159, 0.01), rgba(159, 255, 159, 0.02));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 1002;
+        }
+
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(159, 255, 159, 0.8), 
+                transparent
+            );
+            animation: scan 2s linear infinite;
+            z-index: 1003;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0%;
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        .terminal-header {
+            color: #9fff9f;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #9fff9f;
+            padding-bottom: 10px;
+            padding-left: 15px;
+        }
+
+        .boot-sequence {
+            color: #9fff9f;
+            margin-bottom: 20px;
+            padding-left: 15px;
+        }
+
+        .boot-line {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        .boot-line:nth-child(1) { animation-delay: 0.2s; }
+        .boot-line:nth-child(2) { animation-delay: 0.6s; }
+        .boot-line:nth-child(3) { animation-delay: 1.0s; }
+        .boot-line:nth-child(4) { animation-delay: 1.4s; }
+        .boot-line:nth-child(5) { animation-delay: 1.8s; }
+
+        .prompt-line {
+            display: flex;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .prompt {
+            color: #9fff9f;
+            white-space: nowrap;
+        }
+
+        .user {
+            color: #9fff9f;
+        }
+
+        .hostname {
+            color: #9fff9f;
+        }
+
+        .path {
+            color: #9fff9f;
+        }
+
+        .cursor {
+            width: 10px;
+            height: 20px;
+            background: #9fff9f;
+            position: absolute;
+            left: 0;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
+        }
+
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            animation: glitch-1 0.5s infinite;
+            color: #9fff9f;
             z-index: -1;
         }
-        .saumon {
-            position: absolute;
-            font-size: 50px;
-            font-family: 'Arial', sans-serif;
-            color: #FF5733;
-            z-index: 1;
-            animation: move 10s infinite alternate,
-                         resize 8s infinite alternate,
-                         colorize 12s infinite alternate;
+
+        .glitch::after {
+            animation: glitch-2 0.5s infinite;
+            color: #9fff9f;
+            z-index: -2;
         }
 
-        @keyframes move {
-            0% { left: 10vw; top: 10vh; }
-            25% { left: 80vw; top: 50vh; }
-            50% { left: 20vw; top: 80vh; }
-            75% { left: 50vw; top: 20vh; }
-            100% { left: 10vw; top: 10vh; }
+        @keyframes glitch-1 {
+            0%, 14%, 15%, 49%, 50%, 99%, 100% {
+                transform: translate(0);
+            }
+            15%, 49% {
+                transform: translate(-2px, 0);
+            }
         }
 
-        @keyframes resize {
-            0% { font-size: 20px; }
-            50% { font-size: 100px; }
-            100% { font-size: 20px; }
+        @keyframes glitch-2 {
+            0%, 20%, 21%, 62%, 63%, 99%, 100% {
+                transform: translate(0);
+            }
+            21%, 62% {
+                transform: translate(2px, 0);
+            }
         }
 
-        @keyframes colorize {
-            0% { color: #FF5733; }
-            25% { color: #FFC300; }
-            50% { color: #DAF7A6; }
-            75% { color: #C70039; }
-            100% { color: #900C3F; }
+        .typewriter {
+            overflow: hidden;
+            border-right: 0.15em solid #9fff9f;
+            white-space: nowrap;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink-caret {
+            from, to {
+                border-color: transparent;
+            }
+            50% {
+                border-color: #9fff9f;
+            }
+        }
+
+        .login-box {
+            border: 2px solid #9fff9f;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(159, 255, 159, 0.3);
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .login-header {
+            color: #9fff9f;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #9fff9f;
+            padding-bottom: 15px;
+        }
+
+        .login-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .password-label {
+            color: #9fff9f;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .password-field {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #9fff9f;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            font-size: 16px;
+            min-height: 20px;
+        }
+
+        #password-display {
+            color: #9fff9f;
+            letter-spacing: 2px;
+        }
+
+        .login-cursor {
+            color: #9fff9f;
+            animation: blink-cursor 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink-cursor {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
+        }
+
+        .login-error {
+            color: #ff6b6b !important;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .help-commands {
+            margin-top: 10px;
+        }
+
+        .help-command {
+            display: flex;
+            margin-bottom: 2px;
+            margin-left: 2ch; /* Indentation */
+        }
+
+        .cmd-name {
+            min-width: 15ch; /* Largeur fixe pour les noms de commandes */
+            color: #9fff9f;
+            flex-shrink: 0; /* Empêche la réduction */
+        }
+
+        .cmd-desc {
+            color: #9fff9f;
+            word-wrap: break-word;
+            padding-left: 1ch; /* Espace entre commande et description */
+        }
+
+        /* Responsive pour petits écrans */
+        @media (max-width: 768px) {
+            .help-command {
+                flex-direction: column;
+                margin-bottom: 8px;
+            }
+            
+            .cmd-desc {
+                padding-left: 4ch; /* Alignement avec l'indentation + un peu plus */
+                padding-top: 2px;
+            }
+        }
+
+        /* Pour très petits écrans */
+        @media (max-width: 480px) {
+            .cmd-name {
+                min-width: auto;
+            }
+            
+            .cmd-desc {
+                padding-left: 2ch;
+            }
         }
     </style>
 </head>
 <body>
-    <canvas id="water-bg"></canvas>
-    <span class="saumon">saumon</span>
+    <div class="crt-screen">
+        <div class="scan-line"></div>
+        <div class="static-noise"></div>
+        <div class="snow-overlay"></div>
+        <div class="interference-lines"></div>
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.0">SAUMON TERMINAL v1.1.0</div>
+                <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
+            </div>
+            
+            <div class="boot-sequence">
+                <div class="boot-line">Initializing system...</div>
+                <div class="boot-line">Loading kernel modules... [OK]</div>
+                <div class="boot-line">Starting network services... [OK]</div>
+                <div class="boot-line">Mounting filesystems... [OK]</div>
+                <div class="boot-line">System ready.</div>
+            </div>
+
+            <div class="command-history" id="command-history">
+            </div>
+
+            <div class="input-line">
+                <input type="text" class="command-input" id="command-input" autofocus disabled>
+                <div class="cursor"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('water-bg');
-        const ctx = canvas.getContext('2d');
+        // Variables globales
+        let commandHistoryArray = [];
+        let historyIndex = -1;
+        let isLoginMode = false;
+        let isBootLoading = true; // Démarrer en mode boot au chargement initial
+        let commandInput = document.getElementById('command-input');
+        let commandHistory = document.getElementById('command-history');
+        let cursor = document.querySelector('.cursor');
 
-        const pixelSize = 5;
-        let cols, rows;
-        let buffer1, buffer2;
-        let damping = 0.99;
-
-        function setup() {
-            cols = Math.ceil(window.innerWidth / pixelSize);
-            rows = Math.ceil(window.innerHeight / pixelSize);
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            buffer1 = Array(rows).fill(0).map(() => Array(cols).fill(0));
-            buffer2 = Array(rows).fill(0).map(() => Array(cols).fill(0));
+        // Fonction pour jouer un bip
+        function playBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Bip oldschool : fréquence plus basse, son plus carré
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.08);
         }
 
-        function disturb() {
-            const x = Math.floor(Math.random() * cols);
-            const y = Math.floor(Math.random() * rows);
-            buffer1[y][x] = 2000;
+        // Fonction pour jouer un double bip d'erreur
+        function playErrorBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Premier bip
+            const oscillator1 = audioContext.createOscillator();
+            const gainNode1 = audioContext.createGain();
+            oscillator1.connect(gainNode1);
+            gainNode1.connect(audioContext.destination);
+            oscillator1.type = 'square';
+            oscillator1.frequency.setValueAtTime(200, audioContext.currentTime);
+            gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode1.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
+            oscillator1.start(audioContext.currentTime);
+            oscillator1.stop(audioContext.currentTime + 0.06);
+            
+            // Deuxième bip (décalé de 0.08s)
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode2 = audioContext.createGain();
+            oscillator2.connect(gainNode2);
+            gainNode2.connect(audioContext.destination);
+            oscillator2.type = 'square';
+            oscillator2.frequency.setValueAtTime(200, audioContext.currentTime + 0.08);
+            gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime + 0.08);
+            gainNode2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.14);
+            oscillator2.start(audioContext.currentTime + 0.08);
+            oscillator2.stop(audioContext.currentTime + 0.14);
         }
 
-        function update() {
-            for (let y = 1; y < rows - 1; y++) {
-                for (let x = 1; x < cols - 1; x++) {
-                    buffer2[y][x] =
-                        ((buffer1[y - 1][x] +
-                          buffer1[y + 1][x] +
-                          buffer1[y][x - 1] +
-                          buffer1[y][x + 1]) / 2) - buffer2[y][x];
-                    buffer2[y][x] *= damping;
+        // Fonction pour afficher l'écran de login
+        function showLoginScreen() {
+            isLoginMode = true;
+            const terminal = document.querySelector('.terminal');
+            terminal.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+                    <div class="login-box">
+                        <div class="login-header">LOGIN</div>
+                        <div class="login-content">
+                            <div class="password-label">Password:</div>
+                            <div class="password-field">
+                                <span id="password-display"></span><span id="cursor-login" class="login-cursor">█</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="password" id="password-input" maxlength="10" style="position: absolute; left: -9999px;" autofocus>
+            `;
+            
+            // Attendre que le DOM soit mis à jour
+            setTimeout(() => {
+                setupPasswordInput();
+            }, 50);
+        }
+
+        // Fonction pour configurer l'input du mot de passe
+        function setupPasswordInput() {
+            const passwordInput = document.getElementById('password-input');
+            const passwordDisplay = document.getElementById('password-display');
+            const cursorLogin = document.getElementById('cursor-login');
+            const terminal = document.querySelector('.terminal');
+            
+            if (!passwordInput || !passwordDisplay || !cursorLogin) return;
+            
+            // Fonction pour maintenir le focus sur l'input de mot de passe
+            function maintainFocus() {
+                if (isLoginMode && passwordInput) {
+                    passwordInput.focus();
                 }
             }
-
-            let temp = buffer1;
-            buffer1 = buffer2;
-            buffer2 = temp;
+            
+            // Gestionnaires pour maintenir le focus
+            document.addEventListener('click', maintainFocus);
+            document.addEventListener('focusin', maintainFocus);
+            passwordInput.addEventListener('blur', function() {
+                // Petit délai pour permettre à d'autres événements de se déclencher
+                setTimeout(maintainFocus, 10);
+            });
+            
+            // Fonction pour mettre à jour l'affichage du mot de passe
+            function updatePasswordDisplay() {
+                const inputLength = passwordInput.value.length;
+                const dots = '•'.repeat(inputLength);
+                passwordDisplay.textContent = dots;
+            }
+            
+            passwordInput.addEventListener('input', updatePasswordDisplay);
+            
+            passwordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const password = passwordInput.value.trim();
+                    
+                    if (password.toLowerCase() === 'saumon') {
+                        playBeep();
+                        restoreTerminal();
+                    } else {
+                        playErrorBeep();
+                        passwordInput.value = '';
+                        updatePasswordDisplay();
+                        
+                        // Supprimer les anciens messages d'erreur
+                        const oldErrors = terminal.querySelectorAll('.login-error');
+                        oldErrors.forEach(error => error.remove());
+                        
+                        // Ajouter le nouveau message d'erreur dans la login-box
+                        const loginBox = terminal.querySelector('.login-box');
+                        if (loginBox) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'login-error';
+                            errorDiv.textContent = 'ACCESS DENIED';
+                            loginBox.appendChild(errorDiv);
+                        }
+                    }
+                }
+            });
+            
+            // Initialiser l'affichage
+            updatePasswordDisplay();
+            passwordInput.focus();
+            
+            // Stocker les références pour pouvoir les supprimer plus tard
+            passwordInput._maintainFocus = maintainFocus;
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    const value = buffer1[y][x];
-                    const blue = 150 + value;
-                    const lightBlue = 200 + value;
-                    ctx.fillStyle = `rgb(0, ${blue}, ${lightBlue})`;
-                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-                }
+        // Fonction pour nettoyer les gestionnaires d'événements du login
+        function cleanupLoginEventListeners() {
+            const passwordInput = document.getElementById('password-input');
+            if (passwordInput && passwordInput._maintainFocus) {
+                document.removeEventListener('click', passwordInput._maintainFocus);
+                document.removeEventListener('focusin', passwordInput._maintainFocus);
             }
         }
 
-        let lastFrameTime = 0;
-        const frameInterval = 50; // approx 20 FPS
+        // Fonction pour restaurer le terminal normal
+        function restoreTerminal() {
+            // Nettoyer les gestionnaires d'événements du login
+            cleanupLoginEventListeners();
+            
+            isLoginMode = false;
+            isBootLoading = true;
+            const terminal = document.querySelector('.terminal');
+            terminal.innerHTML = `
+                <div class="terminal-header">
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.0">SAUMON TERMINAL v1.1.0</div>
+                    <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
+                </div>
+                
+                <div class="boot-sequence">
+                    <div class="boot-line">Initializing system...</div>
+                    <div class="boot-line">Loading kernel modules... [OK]</div>
+                    <div class="boot-line">Starting network services... [OK]</div>
+                    <div class="boot-line">Mounting filesystems... [OK]</div>
+                    <div class="boot-line">System ready.</div>
+                </div>
 
-        function animate(currentTime) {
-            requestAnimationFrame(animate);
-            if (currentTime - lastFrameTime < frameInterval) {
+                <div class="command-history" id="command-history">
+                </div>
+
+                <div class="input-line">
+                    <input type="text" class="command-input" id="command-input" autofocus disabled maxlength="20">
+                    <div class="cursor"></div>
+                </div>
+            `;
+            
+            // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
+            setTimeout(() => {
+                isBootLoading = false;
+                const bootInput = document.getElementById('command-input');
+                if (bootInput) {
+                    bootInput.disabled = false;
+                }
+                setupMainTerminal();
+            }, 3000); // 3 secondes pour laisser le temps au boot de se terminer
+        }
+
+        // Fonction pour configurer le terminal principal
+        function setupMainTerminal() {
+            const newCommandInput = document.getElementById('command-input');
+            const newCommandHistory = document.getElementById('command-history');
+            const newCursor = document.querySelector('.cursor');
+            
+            if (!newCommandInput) return;
+            
+            // Mettre à jour les références globales
+            commandInput = newCommandInput;
+            commandHistory = newCommandHistory;
+            cursor = newCursor;
+            
+            // Gestion de la saisie de commandes
+            newCommandInput.addEventListener('keydown', function(e) {
+                if (isLoginMode || isBootLoading) return;
+                
+                // Vérifier la limite de caractères pour les touches de saisie
+                if (e.key.length === 1 && newCommandInput.value.length >= 20) {
+                    e.preventDefault();
+                    playErrorBeep();
+                    return;
+                }
+                
+                if (e.key === 'Enter') {
+                    const command = newCommandInput.value.trim();
+                    if (command) {
+                        executeCommand(command);
+                        newCommandInput.value = '';
+                        historyIndex = -1;
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistoryArray.length - 1) {
+                        historyIndex++;
+                        const historyCommand = commandHistoryArray[commandHistoryArray.length - 1 - historyIndex] || '';
+                        newCommandInput.value = historyCommand.substring(0, 20); // Tronquer si nécessaire
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        const historyCommand = commandHistoryArray[commandHistoryArray.length - 1 - historyIndex] || '';
+                        newCommandInput.value = historyCommand.substring(0, 20); // Tronquer si nécessaire
+                    } else if (historyIndex === 0) {
+                        historyIndex = -1;
+                        newCommandInput.value = '';
+                    }
+                }
+            });
+
+            // Maintenir le focus
+            document.addEventListener('click', () => {
+                if (!isLoginMode) {
+                    newCommandInput.focus();
+                }
+            });
+
+            // Positionner le curseur
+            function updateCursorPosition() {
+                const text = newCommandInput.value;
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                context.font = '14px Courier Prime, Courier New, monospace';
+                const textWidth = context.measureText(text).width;
+                newCursor.style.left = (15 + textWidth) + 'px';
+            }
+
+            newCommandInput.addEventListener('input', () => {
+                // Vérifier la limite de 20 caractères
+                if (newCommandInput.value.length > 20) {
+                    newCommandInput.value = newCommandInput.value.substring(0, 20);
+                    playErrorBeep();
+                }
+                updateCursorPosition();
+            });
+
+            newCommandInput.addEventListener('keydown', () => {
+                setTimeout(updateCursorPosition, 0);
+            });
+
+            updateCursorPosition();
+            newCommandInput.focus(); // S'assurer que le focus est sur l'input
+        }
+
+        // Gestion de la saisie
+        commandInput.addEventListener('keydown', function(e) {
+            if (isLoginMode) return; // Ignorer si on est en mode login
+            
+            // Vérifier la limite de caractères pour les touches de saisie
+            if (e.key.length === 1 && commandInput.value.length >= 20) {
+                e.preventDefault();
+                playErrorBeep();
                 return;
             }
-            lastFrameTime = currentTime;
+            
+            if (e.key === 'Enter') {
+                const command = commandInput.value.trim();
+                if (command) {
+                    executeCommand(command);
+                    commandInput.value = '';
+                    historyIndex = -1;
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex < commandHistoryArray.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistoryArray[commandHistoryArray.length - 1 - historyIndex] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistoryArray[commandHistoryArray.length - 1 - historyIndex] || '';
+                } else if (historyIndex === 0) {
+                    historyIndex = -1;
+                    commandInput.value = '';
+                }
+            }
+        });
 
-            update();
-            draw();
-            if (Math.random() < 0.1) {
-                disturb();
+        // Gestion de l'événement input pour la limite de caractères (sécurité)
+        commandInput.addEventListener('input', function() {
+            if (commandInput.value.length > 20) {
+                commandInput.value = commandInput.value.substring(0, 20);
+                playErrorBeep();
+            }
+        });
+
+        // Exécution des commandes
+        function executeCommand(command) {
+            // Ajouter la commande à l'historique
+            commandHistoryArray.push(command);
+            
+            // Afficher la commande
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            commandLine.innerHTML = `<span>> ${command.toUpperCase()}</span>`;
+            commandHistory.appendChild(commandLine);
+
+            // Traiter la commande
+            const output = document.createElement('div');
+            output.className = 'command-output';
+            
+            if (command.toLowerCase() === 'help') {
+                playBeep();
+                output.innerHTML = `
+                    <div>Available commands:</div>
+                    <div class="help-commands">
+                        <div class="help-command">
+                            <span class="cmd-name">PASSAGEDUGOIS</span>
+                            <span class="cmd-desc">open 'Passage du Gois' project</span>
+                        </div>
+                        <div class="help-command">
+                            <span class="cmd-name">GITKTTI</span>
+                            <span class="cmd-desc">open 'GitKtti™' project</span>
+                        </div>
+                        <div class="help-command">
+                            <span class="cmd-name">FARTSIM</span>
+                            <span class="cmd-desc">open 'Fart Simulator' repo</span>
+                        </div>
+                        <div class="help-command">
+                            <span class="cmd-name">CLEAR</span>
+                            <span class="cmd-desc">clear history</span>
+                        </div>
+                        <div class="help-command">
+                            <span class="cmd-name">EXIT</span>
+                            <span class="cmd-desc">logout</span>
+                        </div>
+                        <div class="help-command">
+                            <span class="cmd-name">HELP</span>
+                            <span class="cmd-desc">this help</span>
+                        </div>
+                    </div>
+                `;
+            } else if (command.toLowerCase() === 'passagedugois') {
+                playBeep();
+                window.open('https://saumon.github.io/fr.passagedugois.app/', '_blank');
+                output.textContent = `Opening passagedugois...`;
+            } else if (command.toLowerCase() === 'gitktti') {
+                playBeep();
+                window.open('https://saumon.github.io/gitktti/', '_blank');
+                output.textContent = `Opening gitktti...`;
+            } else if (command.toLowerCase() === 'fartsim') {
+                playBeep();
+                window.open('https://github.com/saumon/fartsimulator', '_blank');
+                output.textContent = `Opening fart simulator...`;
+            } else if (command.toLowerCase() === 'clear') {
+                playBeep();
+                // Effacer l'historique
+                commandHistory.innerHTML = '';
+                // Effacer la boot sequence uniquement
+                const bootSequence = document.querySelector('.boot-sequence');
+                if (bootSequence) bootSequence.style.display = 'none';
+                // Ne pas ajouter de message de sortie pour clear
+                commandHistory.scrollTop = commandHistory.scrollHeight;
+                return; // Sortir de la fonction sans ajouter d'output ni de saut de ligne
+            } else if (command.toLowerCase() === 'exit') {
+                playBeep();
+                showLoginScreen();
+                return; // Sortir de la fonction sans ajouter d'output
+            } else {
+                playErrorBeep();
+                output.textContent = `${command}: command not found`;
+            }
+            
+            commandHistory.appendChild(output);
+
+            // Ajouter un saut de ligne
+            const lineBreak = document.createElement('div');
+            lineBreak.innerHTML = '&nbsp;';
+            commandHistory.appendChild(lineBreak);
+
+            // Auto-scroll vers le bas
+            commandHistory.scrollTop = commandHistory.scrollHeight;
+        }
+
+        // Maintenir le focus sur l'input
+        document.addEventListener('click', () => {
+            commandInput.focus();
+        });
+
+        // Positionner le curseur après le texte
+        function updateCursorPosition() {
+            const text = commandInput.value;
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = '14px Courier Prime, Courier New, monospace';
+            const textWidth = context.measureText(text).width;
+            cursor.style.left = (15 + textWidth) + 'px'; // 15px de padding + largeur du texte
+        }
+
+        commandInput.addEventListener('input', () => {
+            updateCursorPosition();
+        });
+
+        commandInput.addEventListener('keydown', () => {
+            setTimeout(updateCursorPosition, 0); // Délai pour que la valeur soit mise à jour
+        });
+
+        // Position initiale du curseur
+        updateCursorPosition();
+
+        // Effet de scintillement occasionnel plus intense
+        setInterval(() => {
+            if (Math.random() < 0.15) { // Plus fréquent
+                document.body.style.filter = 'brightness(1.3) contrast(1.4) saturate(1.2)';
+                setTimeout(() => {
+                    document.body.style.filter = 'brightness(1.1) contrast(1.2)';
+                }, Math.random() * 80 + 20); // Durée variable
+            }
+        }, 80); // Plus fréquent
+
+        // Effet de clignotement des lignes plus prononcé
+        setInterval(() => {
+            const lines = document.querySelectorAll('.boot-line, .command-output, .help-command');
+            const randomLine = lines[Math.floor(Math.random() * lines.length)];
+            if (randomLine && Math.random() < 0.08) { // Plus fréquent
+                randomLine.style.opacity = Math.random() * 0.5 + 0.3; // Opacité variable
+                setTimeout(() => {
+                    randomLine.style.opacity = '1';
+                }, Math.random() * 150 + 50);
+            }
+        }, 150);
+
+        // Simulation de bruit de fond CRT plus intense
+        function addNoise() {
+            const terminal = document.querySelector('.terminal');
+            if (Math.random() < 0.05) { // Plus fréquent
+                const intensity = Math.random() * 0.5 + 0.2;
+                terminal.style.textShadow = `${intensity}px ${intensity}px 0px #9fff9f, 0 0 ${intensity * 30}px #9fff9f`;
+                terminal.style.filter = `blur(${intensity}px) contrast(${1 + intensity})`;
+                setTimeout(() => {
+                    terminal.style.textShadow = 'none';
+                    terminal.style.filter = 'blur(0.3px)';
+                }, Math.random() * 50 + 20);
             }
         }
 
-        window.addEventListener('resize', setup);
-        setup();
-        animate(0);
+        // Effet de distorsion CRT plus visible
+        function crtDistortion() {
+            const screen = document.querySelector('.crt-screen');
+            if (Math.random() < 0.03) { // Plus fréquent
+                const scaleX = 1 + (Math.random() - 0.5) * 0.005;
+                const scaleY = 1 + (Math.random() - 0.5) * 0.005;
+                const rotate = (Math.random() - 0.5) * 0.5;
+                screen.style.transform = `scale(${scaleX}, ${scaleY}) rotate(${rotate}deg)`;
+                setTimeout(() => {
+                    screen.style.transform = 'scale(1)';
+                }, Math.random() * 200 + 50);
+            }
+        }
 
+        // Nouveau: Effet de lignes de balayage mobiles
+        function scanlineInterference() {
+            const staticNoise = document.querySelector('.static-noise');
+            if (Math.random() < 0.02) {
+                staticNoise.style.opacity = Math.random() * 0.1 + 0.05;
+                staticNoise.style.background = `linear-gradient(${Math.random() * 360}deg, 
+                    transparent ${Math.random() * 30}%, 
+                    rgba(159, 255, 159, ${Math.random() * 0.1}) ${Math.random() * 20 + 40}%, 
+                    transparent ${Math.random() * 30 + 60}%)`;
+                setTimeout(() => {
+                    staticNoise.style.opacity = '0.03';
+                    staticNoise.style.background = 'transparent';
+                }, Math.random() * 100 + 50);
+            }
+        }
+
+        // Nouveau: Artefacts de couleur occasionnels
+        function colorArtifacts() {
+            const terminal = document.querySelector('.terminal');
+            if (Math.random() < 0.01) {
+                const hue = Math.random() * 60 + 90; // Variations autour du vert
+                terminal.style.filter = `hue-rotate(${hue}deg) saturate(1.5)`;
+                setTimeout(() => {
+                    terminal.style.filter = 'blur(0.3px)';
+                }, Math.random() * 200 + 100);
+            }
+        }
+
+        // Nouveau: Générateur de bruit analogique intensifié
+        function createAnalogNoise() {
+            const noiseContainer = document.querySelector('.snow-overlay');
+            let noiseActive = true;
+            
+            // Créer une grille de pixels de bruit plus dense
+            function generateNoiseFrame() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 120; // Légèrement plus petit pour pixels plus gros
+                canvas.height = 120;
+                
+                const imageData = ctx.createImageData(canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Densité de bruit plus élevée
+                const noiseDensity = Math.random() * 0.4 + 0.25; // Entre 25% et 65% des pixels
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    if (Math.random() < noiseDensity) {
+                        const noise = Math.random() * 255;
+                        const alpha = Math.random() * 0.35 + 0.1; // Plus opaque: 0.1 à 0.45
+                        
+                        data[i] = noise;     // Rouge
+                        data[i + 1] = noise; // Vert
+                        data[i + 2] = noise; // Bleu
+                        data[i + 3] = alpha * 255; // Alpha
+                    } else {
+                        // Pixel transparent
+                        data[i] = 0;
+                        data[i + 1] = 0;
+                        data[i + 2] = 0;
+                        data[i + 3] = 0;
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                return canvas.toDataURL();
+            }
+            
+            // Mettre à jour le bruit plus rapidement
+            function updateNoise() {
+                if (!noiseActive) return;
+                
+                // Plus de chance de mise à jour
+                if (Math.random() < 0.85) { // 85% de chance au lieu de 70%
+                    const dataUrl = generateNoiseFrame();
+                    noiseContainer.style.backgroundImage = `url(${dataUrl})`;
+                    noiseContainer.style.backgroundSize = `${Math.random() * 40 + 80}px ${Math.random() * 40 + 80}px`; // Pixels plus gros
+                    noiseContainer.style.backgroundRepeat = 'repeat';
+                }
+                
+                // Timing plus rapide
+                const nextUpdate = Math.random() * 60 + 40; // Entre 40 et 100ms (plus rapide)
+                setTimeout(updateNoise, nextUpdate);
+            }
+            
+            // Démarrer immédiatement
+            updateNoise();
+            
+            // Pauses moins fréquentes
+            setInterval(() => {
+                if (Math.random() < 0.02) { // 2% de chance au lieu de 5%
+                    noiseActive = false;
+                    noiseContainer.style.backgroundImage = 'none';
+                    setTimeout(() => {
+                        noiseActive = true;
+                    }, Math.random() * 300 + 100); // Pauses plus courtes
+                }
+            }, 3000); // Moins fréquent
+            
+            // Variations d'intensité plus fréquentes et plus fortes
+            setInterval(() => {
+                if (Math.random() < 0.15) { // Plus fréquent: 15% au lieu de 8%
+                    noiseContainer.style.opacity = Math.random() * 0.25 + 0.1; // Entre 0.1 et 0.35 (plus intense)
+                    setTimeout(() => {
+                        noiseContainer.style.opacity = '0.15';
+                    }, Math.random() * 300 + 150);
+                }
+            }, 500); // Plus fréquent
+        }
+
+        // Nouveau: Lignes de brouillage horizontales plus discrètes
+        function createScanlineInterference() {
+            const terminal = document.querySelector('.terminal');
+            
+            function addScanlineGlitch() {
+                if (Math.random() < 0.02) { // Réduit de 5% à 2%
+                    const line = document.createElement('div');
+                    line.style.position = 'fixed';
+                    line.style.left = '0';
+                    line.style.width = '100%';
+                    line.style.height = Math.random() * 2 + 0.5 + 'px'; // Plus fin
+                    line.style.top = Math.random() * window.innerHeight + 'px';
+                    line.style.background = `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.1})`; // Plus transparent
+                    line.style.zIndex = '1004';
+                    line.style.pointerEvents = 'none';
+                    line.style.mixBlendMode = 'difference';
+                    
+                    document.body.appendChild(line);
+                    
+                    // Supprimer après un délai plus court
+                    setTimeout(() => {
+                        if (line.parentNode) {
+                            line.parentNode.removeChild(line);
+                        }
+                    }, Math.random() * 80 + 30); // Plus court
+                }
+            }
+            
+            // Timing plus aléatoire
+            function scheduleNextGlitch() {
+                setTimeout(() => {
+                    addScanlineGlitch();
+                    scheduleNextGlitch();
+                }, Math.random() * 300 + 100); // Entre 100 et 400ms
+            }
+            
+            scheduleNextGlitch();
+        }
+
+        // Effet de brouillage dynamique plus subtil
+        function analogInterference() {
+            const noiseOverlay = document.querySelector('.snow-overlay');
+            if (Math.random() < 0.08) { // Réduit de 20% à 8%
+                // Variation d'intensité plus douce
+                const intensity = Math.random() * 0.15 + 0.04; // Entre 0.04 et 0.19 (plus subtil)
+                noiseOverlay.style.opacity = intensity;
+                
+                // Décalages plus subtils et moins fréquents
+                if (Math.random() < 0.15) { // Réduit de 30% à 15%
+                    noiseOverlay.style.transform = `translate(${Math.random() * 2 - 1}px, ${Math.random() * 2 - 1}px)`; // Plus petit
+                    setTimeout(() => {
+                        noiseOverlay.style.transform = 'translate(0px, 0px)';
+                    }, Math.random() * 150 + 50);
+                }
+                
+                setTimeout(() => {
+                    noiseOverlay.style.opacity = '0.06';
+                }, Math.random() * 500 + 200); // Durée plus longue pour transition douce
+            }
+        }
+
+        // Nouveau: Parasites de réception occasionnels
+        function receptionInterference() {
+            if (Math.random() < 0.01) { // Plus fréquent, 1% de chance
+                const terminal = document.querySelector('.terminal');
+                const snowOverlay = document.querySelector('.snow-overlay');
+                
+                // Augmentation drastique du bruit pendant un court moment
+                snowOverlay.style.opacity = Math.random() * 0.3 + 0.2; // Entre 0.2 et 0.5 (très visible)
+                terminal.style.filter = 'blur(1.5px) contrast(1.8) brightness(1.5)'; // Plus intense
+                
+                setTimeout(() => {
+                    snowOverlay.style.opacity = '0.1';
+                    terminal.style.filter = 'blur(0.3px)';
+                }, Math.random() * 400 + 300); // Durée plus longue
+            }
+        }
+
+        setInterval(addNoise, 30); // Plus fréquent
+        setInterval(crtDistortion, 200); // Plus fréquent
+        setInterval(scanlineInterference, 150); // Nouveau effet
+        setInterval(colorArtifacts, 400); // Nouveau effet moins fréquent
+        setInterval(analogInterference, 150); // Moins fréquent pour plus de subtilité
+        setInterval(receptionInterference, 500); // Parasites plus fréquents
+
+        // Initialisation au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeBootSequence();
+        });
+
+        // Fonction pour initialiser la séquence de boot au premier chargement
+        function initializeBootSequence() {
+            // Démarrer les effets de brouillage analogique
+            createAnalogNoise();
+            createScanlineInterference();
+            
+            // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
+            setTimeout(() => {
+                isBootLoading = false;
+                const bootInput = document.getElementById('command-input');
+                if (bootInput) {
+                    bootInput.disabled = false;
+                }
+                setupMainTerminal();
+            }, 3000); // 3 secondes pour laisser le temps au boot de se terminer
+        }
+
+        // Appeler setupMainTerminal dès maintenant aussi (en cas de chargement sans DOMContentLoaded)
+        if (document.readyState === 'loading') {
+            // Document encore en cours de chargement, attendre DOMContentLoaded
+        } else {
+            // Document déjà chargé
+            initializeBootSequence();
+        }
     </script>
 </body>
 </html>
