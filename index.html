@@ -19,7 +19,7 @@
             background: #000;
             color: #9fff9f;
             font-family: 'Courier Prime', 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 20px;
             line-height: 1.4;
             overflow: hidden;
             filter: contrast(1.2) brightness(1.1);
@@ -75,7 +75,7 @@
 
         .command-block {
             margin: 10px 0;
-            border-bottom: 1px solid rgba(159, 255, 159, 0.1);
+            border-bottom: none;
             padding-bottom: 5px;
             opacity: 1; /* Luminosité normale par défaut */
             transition: opacity 0.3s ease; /* Animation fluide lors des changements */
@@ -93,7 +93,7 @@
             margin: 10px 0;
             position: relative;
             padding: 10px 0;
-            border-bottom: 1px solid rgba(159, 255, 159, 0.2);
+            border-bottom: none;
         }
 
         .command-input {
@@ -101,7 +101,7 @@
             border: none;
             color: #9fff9f;
             font-family: 'Courier Prime', 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 20px;
             outline: none;
             flex: 1;
             caret-color: transparent;
@@ -783,7 +783,7 @@
         /* Réduction de la taille de police pour mobile */
         @media screen and (max-width: 768px) {
             body, html {
-                font-size: 12px;
+                font-size: 18px;
             }
             
             .help-commands {
@@ -792,36 +792,38 @@
             
             /* Ajustements du curseur et de l'input pour mobile */
             .cursor {
-                width: 8px;
-                height: 16px; /* Proportionnel à la taille de police 12px */
-                left: 15px; /* Aligné avec le padding-left de l'input */
+                width: 0.5em;
+                height: 1em;
+                left: 0;
                 top: 50%;
-                transform: translateY(-50%); /* Centrage vertical */
+                transform: translateY(-50%);
             }
             
             .command-input {
-                font-size: 12px; /* Cohérent avec la taille de police globale */
+                font-size: 18px;
                 line-height: 1.4;
-                padding-left: 15px;
+                padding-left: 0;
             }
         }
 
         /* Pour très petits écrans - encore plus compact */
         @media screen and (max-width: 480px) {
             body, html {
-                font-size: 11px;
+                font-size: 16px;
             }
             
             /* Ajustements supplémentaires du curseur pour très petits écrans */
             .cursor {
-                width: 7px;
-                height: 15px; /* Proportionnel à la taille de police 11px */
+                width: 0.45em;
+                height: 1em;
+                left: 0;
                 top: 50%;
-                transform: translateY(-50%); /* Maintenir le centrage vertical */
+                transform: translateY(-50%);
             }
             
             .command-input {
-                font-size: 11px;
+                font-size: 16px;
+                padding-left: 0;
             }
         }
 
@@ -853,8 +855,8 @@
                 padding: 15px;
                 margin: 0;
                 z-index: 1000;
-                border-bottom: 1px solid rgba(159, 255, 159, 0.3);
-                border-top: 1px solid rgba(159, 255, 159, 0.1);
+                border-bottom: none;
+                border-top: none;
             }
             
             .output-container {
@@ -883,7 +885,7 @@
         <div class="tv-snow"></div>
         <div class="terminal">
             <div class="terminal-header">
-                <div class="glitch" data-text="SAUMON TERMINAL v1.1.3">SAUMON TERMINAL v1.1.3</div>
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.4">SAUMON TERMINAL v1.1.4</div>
                 <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
             </div>
             
@@ -1096,7 +1098,7 @@
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
                 <div class="terminal-header">
-                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.3">SAUMON TERMINAL v1.1.3</div>
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.4">SAUMON TERMINAL v1.1.4</div>
                     <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
                 </div>
                 
@@ -1218,11 +1220,11 @@
                 
                 // Adapter la taille de police selon la taille d'écran
                 if (window.innerWidth <= 480) {
-                    measureElement.style.fontSize = '11px';
+                    measureElement.style.fontSize = '16px';
                 } else if (window.innerWidth <= 768) {
-                    measureElement.style.fontSize = '12px';
+                    measureElement.style.fontSize = '18px';
                 } else {
-                    measureElement.style.fontSize = '14px';
+                    measureElement.style.fontSize = '20px';
                 }
                 
                 measureElement.textContent = text;
@@ -1267,7 +1269,7 @@
             
             // Événements pour gérer le clavier mobile
             newCommandInput.addEventListener('focus', scrollToPrompt);
-            newCommandInput.addEventListener('touchstart', scrollToPrompt);
+            newCommandInput.addEventListener('touchstart', scrollToPrompt, { passive: true });
         }
 
         // Gestion de la saisie
