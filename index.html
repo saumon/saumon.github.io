@@ -55,16 +55,15 @@
             display: none; /* Safari et Chrome */
         }
 
-        .command-history {
+        .output-container {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 10px;
-            padding-left: 15px;
+            padding: 0 15px 20px 15px;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* Internet Explorer 10+ */
         }
 
-        .command-history::-webkit-scrollbar {
+        .output-container::-webkit-scrollbar {
             display: none; /* Safari et Chrome */
         }
 
@@ -72,6 +71,14 @@
             margin: 5px 0;
             display: flex;
             flex-wrap: wrap;
+        }
+
+        .command-block {
+            margin: 10px 0;
+            border-bottom: 1px solid rgba(159, 255, 159, 0.1);
+            padding-bottom: 5px;
+            opacity: 1; /* Luminosité normale par défaut */
+            transition: opacity 0.3s ease; /* Animation fluide lors des changements */
         }
 
         .command-output {
@@ -83,10 +90,10 @@
         .input-line {
             display: flex;
             align-items: center;
-            margin-top: auto;
-            margin-bottom: 20px;
+            margin: 10px 0;
             position: relative;
-            padding-bottom: env(keyboard-inset-height, 0px); /* Support pour le clavier iOS */
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(159, 255, 159, 0.2);
         }
 
         .command-input {
@@ -463,6 +470,7 @@
             color: #9fff9f;
             margin-bottom: 20px;
             padding-left: 15px;
+            transition: opacity 0.5s ease-out; /* Animation de disparition fluide */
         }
 
         /* Le boot-sequence hérite maintenant du scroll de command-history */
@@ -512,7 +520,9 @@
             height: 20px;
             background: #9fff9f;
             position: absolute;
-            left: 0;
+            left: 15px; /* Position de base alignée avec le padding de l'input */
+            top: 50%;
+            transform: translateY(-50%); /* Centrage vertical parfait */
             animation: blink 1s infinite;
         }
 
@@ -779,11 +789,38 @@
             .help-commands {
                 margin-top: 8px;
             }
+            
+            /* Ajustements du curseur et de l'input pour mobile */
+            .cursor {
+                width: 8px;
+                height: 16px; /* Proportionnel à la taille de police 12px */
+                left: 15px; /* Aligné avec le padding-left de l'input */
+                top: 50%;
+                transform: translateY(-50%); /* Centrage vertical */
+            }
+            
+            .command-input {
+                font-size: 12px; /* Cohérent avec la taille de police globale */
+                line-height: 1.4;
+                padding-left: 15px;
+            }
         }
 
         /* Pour très petits écrans - encore plus compact */
         @media screen and (max-width: 480px) {
             body, html {
+                font-size: 11px;
+            }
+            
+            /* Ajustements supplémentaires du curseur pour très petits écrans */
+            .cursor {
+                width: 7px;
+                height: 15px; /* Proportionnel à la taille de police 11px */
+                top: 50%;
+                transform: translateY(-50%); /* Maintenir le centrage vertical */
+            }
+            
+            .command-input {
                 font-size: 11px;
             }
         }
@@ -804,35 +841,35 @@
             .terminal {
                 height: 100%; /* Prend toute la hauteur du conteneur parent */
                 max-height: 100%;
-                overflow-y: auto;
-                scroll-behavior: smooth;
+                overflow: hidden;
                 position: relative; /* Position relative dans son conteneur */
             }
             
             .input-line {
-                position: fixed; /* Position fixe pour rester visible */
-                bottom: 0;
-                left: 0;
-                right: 0;
+                position: sticky; /* Reste en haut après le header */
+                top: 0;
                 background: rgba(0, 0, 0, 0.95);
                 backdrop-filter: blur(10px);
-                padding: 10px;
-                margin-bottom: 0;
+                padding: 15px;
+                margin: 0;
                 z-index: 1000;
-                border-top: 1px solid rgba(159, 255, 159, 0.3);
+                border-bottom: 1px solid rgba(159, 255, 159, 0.3);
+                border-top: 1px solid rgba(159, 255, 159, 0.1);
             }
             
-            .command-history {
-                padding-bottom: 100px; /* Plus d'espace pour l'input fixe */
+            .output-container {
+                flex: 1;
+                overflow-y: auto;
                 scroll-behavior: smooth;
+                padding: 15px;
             }
         }
 
         /* Support iOS Safari pour le clavier */
         @supports (padding: max(0px)) {
             @media screen and (max-width: 768px) {
-                .input-line {
-                    padding-bottom: max(10px, env(safe-area-inset-bottom));
+                .output-container {
+                    padding-bottom: max(15px, env(safe-area-inset-bottom));
                 }
             }
         }
@@ -846,20 +883,11 @@
         <div class="tv-snow"></div>
         <div class="terminal">
             <div class="terminal-header">
-                <div class="glitch" data-text="SAUMON TERMINAL v1.1.2">SAUMON TERMINAL v1.1.2</div>
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.3">SAUMON TERMINAL v1.1.3</div>
                 <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
             </div>
             
-            <div class="command-history" id="command-history">
-                <div class="boot-sequence">
-                    <div class="boot-line">Initializing system...</div>
-                    <div class="boot-line">Loading kernel modules... [OK]</div>
-                    <div class="boot-line">Starting network services... [OK]</div>
-                    <div class="boot-line">Mounting filesystems... [OK]</div>
-                    <div class="boot-line">System ready.</div>
-                </div>
-            </div>
-
+            <!-- Prompt en haut, juste après le header -->
             <div class="input-line">
                 <input type="text" class="command-input" id="command-input" autofocus disabled 
                        autocomplete="off" 
@@ -868,6 +896,17 @@
                        spellcheck="false"
                        inputmode="text">
                 <div class="cursor"></div>
+            </div>
+            
+            <!-- Historique des commandes qui défile vers le bas -->
+            <div class="output-container" id="output-container">
+                <div class="boot-sequence">
+                    <div class="boot-line">Initializing system...</div>
+                    <div class="boot-line">Loading kernel modules... [OK]</div>
+                    <div class="boot-line">Starting network services... [OK]</div>
+                    <div class="boot-line">Mounting filesystems... [OK]</div>
+                    <div class="boot-line">System ready.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -879,7 +918,7 @@
         let isLoginMode = false;
         let isBootLoading = true; // Démarrer en mode boot au chargement initial
         let commandInput = document.getElementById('command-input');
-        let commandHistory = document.getElementById('command-history');
+        let commandOutput = document.getElementById('output-container');
         let cursor = document.querySelector('.cursor');
 
         // Fonction pour jouer un bip
@@ -1057,11 +1096,18 @@
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
                 <div class="terminal-header">
-                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.2">SAUMON TERMINAL v1.1.2</div>
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.3">SAUMON TERMINAL v1.1.3</div>
                     <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
                 </div>
                 
-                <div class="command-history" id="command-history">
+                <!-- Prompt en haut, juste après le header -->
+                <div class="input-line">
+                    <input type="text" class="command-input" id="command-input" autofocus disabled maxlength="20">
+                    <div class="cursor"></div>
+                </div>
+                
+                <!-- Historique des commandes qui défile vers le bas -->
+                <div class="output-container" id="output-container">
                     <div class="boot-sequence">
                         <div class="boot-line">Initializing system...</div>
                         <div class="boot-line">Loading kernel modules... [OK]</div>
@@ -1070,16 +1116,21 @@
                         <div class="boot-line">System ready.</div>
                     </div>
                 </div>
-
-                <div class="input-line">
-                    <input type="text" class="command-input" id="command-input" autofocus disabled maxlength="20">
-                    <div class="cursor"></div>
-                </div>
             `;
             
             // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
             setTimeout(() => {
                 isBootLoading = false;
+                
+                // Masquer la séquence de boot avec animation fluide
+                const bootSequence = document.querySelector('.boot-sequence');
+                if (bootSequence) {
+                    bootSequence.style.opacity = '0';
+                    setTimeout(() => {
+                        bootSequence.style.display = 'none';
+                    }, 500); // Attendre la fin de la transition
+                }
+                
                 const bootInput = document.getElementById('command-input');
                 if (bootInput) {
                     bootInput.disabled = false;
@@ -1091,7 +1142,7 @@
         // Fonction pour configurer le terminal principal
         function setupMainTerminal() {
             const newCommandInput = document.getElementById('command-input');
-            const newCommandHistory = document.getElementById('command-history');
+            const newCommandOutput = document.getElementById('output-container');
             const newCursor = document.querySelector('.cursor');
             
             if (!newCommandInput) return;
@@ -1106,7 +1157,7 @@
             
             // Mettre à jour les références globales
             commandInput = newCommandInput;
-            commandHistory = newCommandHistory;
+            commandOutput = newCommandOutput;
             cursor = newCursor;
             
             // Gestion de la saisie de commandes
@@ -1156,11 +1207,29 @@
 
             // Positionner le curseur
             function updateCursorPosition() {
-                const text = newCommandInput.value;
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                context.font = '14px Courier Prime, Courier New, monospace';
-                const textWidth = context.measureText(text).width;
+                const text = newCommandInput.value.toUpperCase(); // Tenir compte du text-transform
+                
+                // Méthode plus précise: utiliser un élément temporaire
+                const measureElement = document.createElement('span');
+                measureElement.style.fontFamily = 'Courier Prime, Courier New, monospace';
+                measureElement.style.visibility = 'hidden';
+                measureElement.style.position = 'absolute';
+                measureElement.style.whiteSpace = 'pre';
+                
+                // Adapter la taille de police selon la taille d'écran
+                if (window.innerWidth <= 480) {
+                    measureElement.style.fontSize = '11px';
+                } else if (window.innerWidth <= 768) {
+                    measureElement.style.fontSize = '12px';
+                } else {
+                    measureElement.style.fontSize = '14px';
+                }
+                
+                measureElement.textContent = text;
+                document.body.appendChild(measureElement);
+                const textWidth = measureElement.offsetWidth;
+                document.body.removeChild(measureElement);
+                
                 newCursor.style.left = (15 + textWidth) + 'px';
             }
 
@@ -1245,16 +1314,50 @@
             }
         });
 
+        // Fonction pour mettre à jour la luminosité des commandes
+        function updateCommandOpacity() {
+            const commandBlocks = commandOutput.querySelectorAll('.command-block');
+            commandBlocks.forEach((block, index) => {
+                if (index === 0) {
+                    block.style.opacity = '1'; // Dernière commande - luminosité maximale
+                } else if (index === 1) {
+                    block.style.opacity = '0.8'; // Précédente
+                } else if (index === 2) {
+                    block.style.opacity = '0.6'; // 3ème
+                } else if (index === 3) {
+                    block.style.opacity = '0.5'; // 4ème
+                } else {
+                    block.style.opacity = '0.4'; // 5ème et suivantes
+                }
+            });
+        }
+
+        // Fonction helper pour insérer un élément en haut de la liste (après boot sequence)
+        function insertAtTop(element) {
+            const bootSequence = commandOutput.querySelector('.boot-sequence');
+            if (bootSequence && bootSequence.style.display !== 'none') {
+                // Insérer après la boot sequence
+                bootSequence.insertAdjacentElement('afterend', element);
+            } else {
+                // Insérer au début du conteneur
+                commandOutput.insertBefore(element, commandOutput.firstChild);
+            }
+        }
+
         // Exécution des commandes
         function executeCommand(command) {
             // Ajouter la commande à l'historique
             commandHistoryArray.push(command);
             
+            // Créer un conteneur pour cette commande complète
+            const commandBlock = document.createElement('div');
+            commandBlock.className = 'command-block';
+            
             // Afficher la commande
             const commandLine = document.createElement('div');
             commandLine.className = 'command-line';
             commandLine.innerHTML = `<span>> ${command.toUpperCase()}</span>`;
-            commandHistory.appendChild(commandLine);
+            commandBlock.appendChild(commandLine);
 
             // Traiter la commande
             const output = document.createElement('div');
@@ -1306,12 +1409,12 @@
             } else if (command.toLowerCase() === 'clear') {
                 playBeep();
                 // Effacer l'historique
-                commandHistory.innerHTML = '';
+                commandOutput.innerHTML = '';
                 // Effacer la boot sequence uniquement
                 const bootSequence = document.querySelector('.boot-sequence');
                 if (bootSequence) bootSequence.style.display = 'none';
                 // Ne pas ajouter de message de sortie pour clear
-                commandHistory.scrollTop = commandHistory.scrollHeight;
+                commandOutput.scrollTop = commandOutput.scrollHeight;
                 return; // Sortir de la fonction sans ajouter d'output ni de saut de ligne
             } else if (command.toLowerCase() === 'exit') {
                 playBeep();
@@ -1322,15 +1425,22 @@
                 output.textContent = `command not found. Need HELP?`;
             }
             
-            commandHistory.appendChild(output);
+            // Ajouter la sortie au bloc de commande
+            commandBlock.appendChild(output);
 
             // Ajouter un saut de ligne
             const lineBreak = document.createElement('div');
             lineBreak.innerHTML = '&nbsp;';
-            commandHistory.appendChild(lineBreak);
+            commandBlock.appendChild(lineBreak);
+            
+            // Insérer tout le bloc en haut
+            insertAtTop(commandBlock);
 
-            // Auto-scroll vers le bas
-            commandHistory.scrollTop = commandHistory.scrollHeight;
+            // Mettre à jour la luminosité de toutes les commandes
+            updateCommandOpacity();
+
+            // Auto-scroll vers le haut pour voir la nouvelle commande
+            commandOutput.scrollTop = 0;
         }
 
         // Maintenir le focus sur l'input
@@ -1355,15 +1465,38 @@
 
         // Positionner le curseur après le texte
         function updateCursorPosition() {
-            const text = commandInput.value;
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            context.font = '14px Courier Prime, Courier New, monospace';
-            const textWidth = context.measureText(text).width;
+            const text = commandInput.value.toUpperCase(); // Tenir compte du text-transform
+            
+            // Méthode plus précise: utiliser un élément temporaire
+            const measureElement = document.createElement('span');
+            measureElement.style.fontFamily = 'Courier Prime, Courier New, monospace';
+            measureElement.style.visibility = 'hidden';
+            measureElement.style.position = 'absolute';
+            measureElement.style.whiteSpace = 'pre';
+            
+            // Adapter la taille de police selon la taille d'écran
+            if (window.innerWidth <= 480) {
+                measureElement.style.fontSize = '11px';
+            } else if (window.innerWidth <= 768) {
+                measureElement.style.fontSize = '12px';
+            } else {
+                measureElement.style.fontSize = '14px';
+            }
+            
+            measureElement.textContent = text;
+            document.body.appendChild(measureElement);
+            const textWidth = measureElement.offsetWidth;
+            document.body.removeChild(measureElement);
+            
             cursor.style.left = (15 + textWidth) + 'px'; // 15px de padding + largeur du texte
         }
 
         commandInput.addEventListener('input', () => {
+            updateCursorPosition();
+        });
+
+        // Repositionner le curseur lors du redimensionnement
+        window.addEventListener('resize', () => {
             updateCursorPosition();
         });
 
@@ -1658,6 +1791,16 @@
             // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
             setTimeout(() => {
                 isBootLoading = false;
+                
+                // Masquer la séquence de boot avec animation fluide
+                const bootSequence = document.querySelector('.boot-sequence');
+                if (bootSequence) {
+                    bootSequence.style.opacity = '0';
+                    setTimeout(() => {
+                        bootSequence.style.display = 'none';
+                    }, 500); // Attendre la fin de la transition
+                }
+                
                 const bootInput = document.getElementById('command-input');
                 if (bootInput) {
                     bootInput.disabled = false;
@@ -1677,29 +1820,29 @@
         // Auto-scroll pendant le boot pour mobile
         function ensureBootScroll() {
             if (window.innerWidth <= 768) { // Sur mobile
-                const commandHistory = document.querySelector('.command-history');
+                const outputContainer = document.querySelector('.output-container');
                 const terminal = document.querySelector('.terminal');
                 
-                if (commandHistory) {
-                    // Scroller vers le bas du command-history (qui contient le boot)
-                    commandHistory.scrollTop = commandHistory.scrollHeight;
+                if (outputContainer) {
+                    // Scroller vers le haut pour voir les nouvelles commandes
+                    outputContainer.scrollTop = 0;
                 }
                 if (terminal) {
-                    terminal.scrollTop = terminal.scrollHeight;
+                    terminal.scrollTop = 0;
                 }
             }
         }
 
-        // Observer les changements dans le command-history pour auto-scroll
+        // Observer les changements dans le command-output pour auto-scroll
         if (window.innerWidth <= 768) {
             const bootObserver = new MutationObserver(() => {
                 ensureBootScroll();
             });
             
             document.addEventListener('DOMContentLoaded', () => {
-                const commandHistory = document.querySelector('.command-history');
-                if (commandHistory) {
-                    bootObserver.observe(commandHistory, { 
+                const outputContainer = document.querySelector('.output-container');
+                if (outputContainer) {
+                    bootObserver.observe(outputContainer, { 
                         childList: true, 
                         subtree: true 
                     });
