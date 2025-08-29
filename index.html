@@ -26,10 +26,14 @@
             text-shadow: 0 0 5px #9fff9f, 0 0 10px #9fff9f, 0 0 15px #9fff9f;
         }
 
-        /* Permettre le scroll sur mobile */
+        /* Permettre le scroll sur mobile et fixer la hauteur */
         @media screen and (max-width: 768px) {
             body, html {
-                overflow: auto;
+                overflow: hidden; /* Pas de scroll sur body/html */
+                height: 100vh;
+                max-height: 100vh;
+                position: fixed; /* Empêche le redimensionnement */
+                width: 100%;
             }
         }
 
@@ -786,25 +790,40 @@
 
         /* Gestion du clavier mobile */
         @media screen and (max-width: 768px) {
+            .crt-screen {
+                position: fixed; /* Ancrage en position fixe */
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 100vh; /* Hauteur fixe de l'écran complet */
+                max-height: 100vh;
+                overflow: hidden;
+            }
+            
             .terminal {
-                height: 100vh;
-                height: 100dvh; /* Dynamic viewport height pour mobile */
+                height: 100%; /* Prend toute la hauteur du conteneur parent */
+                max-height: 100%;
                 overflow-y: auto;
                 scroll-behavior: smooth;
+                position: relative; /* Position relative dans son conteneur */
             }
             
             .input-line {
-                position: sticky;
+                position: fixed; /* Position fixe pour rester visible */
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.9);
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.95);
                 backdrop-filter: blur(10px);
-                padding: 10px 0;
+                padding: 10px;
                 margin-bottom: 0;
-                z-index: 100;
+                z-index: 1000;
+                border-top: 1px solid rgba(159, 255, 159, 0.3);
             }
             
             .command-history {
-                padding-bottom: 80px; /* Espace pour l'input sticky */
+                padding-bottom: 100px; /* Plus d'espace pour l'input fixe */
                 scroll-behavior: smooth;
             }
         }
@@ -827,7 +846,7 @@
         <div class="tv-snow"></div>
         <div class="terminal">
             <div class="terminal-header">
-                <div class="glitch" data-text="SAUMON TERMINAL v1.1.1">SAUMON TERMINAL v1.1.1</div>
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.2">SAUMON TERMINAL v1.1.2</div>
                 <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
             </div>
             
@@ -1038,7 +1057,7 @@
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
                 <div class="terminal-header">
-                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.1">SAUMON TERMINAL v1.1.1</div>
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.2">SAUMON TERMINAL v1.1.2</div>
                     <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
                 </div>
                 
