@@ -26,10 +26,17 @@
             text-shadow: 0 0 5px #9fff9f, 0 0 10px #9fff9f, 0 0 15px #9fff9f;
         }
 
+        /* Permettre le scroll sur mobile */
+        @media screen and (max-width: 768px) {
+            body, html {
+                overflow: auto;
+            }
+        }
+
         .terminal {
             width: 100%;
             height: 100%;
-            padding: 20px;
+            padding: 10px;
             background: #000;
             position: relative;
             display: flex;
@@ -75,6 +82,7 @@
             margin-top: auto;
             margin-bottom: 20px;
             position: relative;
+            padding-bottom: env(keyboard-inset-height, 0px); /* Support pour le clavier iOS */
         }
 
         .command-input {
@@ -298,6 +306,90 @@
             }
         }
 
+        /* Effet de neige TV */
+        .tv-snow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1005;
+            opacity: 0.10;
+            mix-blend-mode: screen;
+            background: transparent;
+        }
+
+        .tv-snow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.9) 1px, 
+                transparent 1px);
+            background-size: 3px 3px;
+            animation: tv-snow-fall 0.05s infinite linear;
+        }
+
+        .tv-snow::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.7) 1px, 
+                transparent 1px);
+            background-size: 5px 5px;
+            animation: tv-snow-fall-reverse 0.08s infinite linear;
+        }
+
+        @keyframes tv-snow-fall {
+            0% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                background-position: 0px 0px, 1px 1px;
+            }
+            25% { 
+                transform: translate(-1px, 1px) rotate(0.5deg);
+                background-position: -2px 2px, 3px -1px;
+            }
+            50% { 
+                transform: translate(1px, -1px) rotate(-0.5deg);
+                background-position: 1px -1px, -2px 3px;
+            }
+            75% { 
+                transform: translate(-0.5px, 0.5px) rotate(0.2deg);
+                background-position: 3px 1px, 1px -2px;
+            }
+            100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                background-position: 0px 0px, 1px 1px;
+            }
+        }
+
+        @keyframes tv-snow-fall-reverse {
+            0% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                background-position: 0px 0px;
+            }
+            33% { 
+                transform: translate(1px, -1px) rotate(-0.3deg);
+                background-position: 2px -2px;
+            }
+            66% { 
+                transform: translate(-1px, 1px) rotate(0.3deg);
+                background-position: -1px 2px;
+            }
+            100% { 
+                transform: translate(0px, 0px) rotate(0deg);
+                background-position: 0px 0px;
+            }
+        }
+
         @keyframes crt-flicker {
             0% {
                 opacity: 1;
@@ -323,6 +415,21 @@
                 inset 0 0 50px rgba(159, 255, 159, 0.1),
                 0 0 100px rgba(0, 0, 0, 0.8);
             background: radial-gradient(ellipse at center, #001100 0%, #000000 100%);
+            /* Effet d'écran bombé */
+            transform: perspective(800px) rotateX(2deg) rotateY(0deg);
+            transform-style: preserve-3d;
+        }
+
+        /* Effet de courbure sur le contenu */
+        .crt-screen .terminal {
+            transform: perspective(1000px) rotateX(-1deg);
+            border-radius: 20px;
+            /* Distorsion barrel pour simuler l'écran bombé */
+            filter: 
+                blur(0.3px) 
+                contrast(1.2) 
+                brightness(1.1)
+                url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="barrel"><feOffset dx="0" dy="0"/><feGaussianBlur stdDeviation="0.5"/><feComponentTransfer><feFuncA type="discrete" tableValues="0 .5 .7 .8 .9 1"/></feComponentTransfer></filter></defs></svg>#barrel');
         }
 
         .crt-screen::before {
@@ -340,36 +447,6 @@
             z-index: 1002;
         }
 
-        .scan-line {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(159, 255, 159, 0.8), 
-                transparent
-            );
-            animation: scan 2s linear infinite;
-            z-index: 1003;
-            pointer-events: none;
-        }
-
-        @keyframes scan {
-            0% {
-                top: 0%;
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.8;
-            }
-            100% {
-                top: 100%;
-                opacity: 0;
-            }
-        }
-
         .terminal-header {
             color: #9fff9f;
             margin-bottom: 20px;
@@ -382,6 +459,14 @@
             color: #9fff9f;
             margin-bottom: 20px;
             padding-left: 15px;
+        }
+
+        /* Le boot-sequence hérite maintenant du scroll de command-history */
+        @media screen and (max-width: 768px) {
+            .boot-sequence {
+                /* Pas de max-height ni overflow spécifique - utilise le scroll parent */
+                margin-bottom: 10px;
+            }
         }
 
         .boot-line {
@@ -521,6 +606,40 @@
             text-align: center;
         }
 
+        /* Optimisations pour mobile */
+        @media screen and (max-width: 768px) {
+            .login-box {
+                padding: 20px;
+                min-width: 280px;
+                margin: 0 10px;
+                position: relative;
+                top: 0;
+            }
+            
+            .login-header {
+                font-size: 20px;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+            }
+            
+            .password-label {
+                font-size: 14px;
+            }
+        }
+
+        /* Ajustements spécifiques pour éviter le clavier mobile */
+        @media screen and (max-height: 500px) {
+            .login-box {
+                padding: 15px;
+                margin-top: 20px;
+            }
+            
+            .login-header {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+        }
+
         .login-header {
             color: #9fff9f;
             font-size: 24px;
@@ -601,7 +720,7 @@
         }
 
         .cmd-name {
-            min-width: 15ch; /* Largeur fixe pour les noms de commandes */
+            min-width: 10ch; /* Largeur réduite pour les noms de commandes */
             color: #9fff9f;
             flex-shrink: 0; /* Empêche la réduction */
         }
@@ -609,59 +728,126 @@
         .cmd-desc {
             color: #9fff9f;
             word-wrap: break-word;
-            padding-left: 1ch; /* Espace entre commande et description */
+            padding-left: 0.2ch; /* Espacement ultra-minimal entre commande et description */
         }
 
         /* Responsive pour petits écrans */
         @media (max-width: 768px) {
             .help-command {
-                flex-direction: column;
-                margin-bottom: 8px;
+                display: flex;
+                flex-direction: row;
+                margin-bottom: 2px;
+                margin-left: 0.25ch;
+            }
+            
+            .cmd-name {
+                min-width: 9ch;
+                flex-shrink: 0;
             }
             
             .cmd-desc {
-                padding-left: 4ch; /* Alignement avec l'indentation + un peu plus */
-                padding-top: 2px;
+                padding-left: 0.1ch;
+                flex: 1;
             }
         }
 
         /* Pour très petits écrans */
         @media (max-width: 480px) {
+            .help-command {
+                margin-left: 0.125ch;
+            }
+            
             .cmd-name {
-                min-width: auto;
+                min-width: 8ch;
             }
             
             .cmd-desc {
-                padding-left: 2ch;
+                padding-left: 0.1ch;
+            }
+        }
+
+        /* Réduction de la taille de police pour mobile */
+        @media screen and (max-width: 768px) {
+            body, html {
+                font-size: 12px;
+            }
+            
+            .help-commands {
+                margin-top: 8px;
+            }
+        }
+
+        /* Pour très petits écrans - encore plus compact */
+        @media screen and (max-width: 480px) {
+            body, html {
+                font-size: 11px;
+            }
+        }
+
+        /* Gestion du clavier mobile */
+        @media screen and (max-width: 768px) {
+            .terminal {
+                height: 100vh;
+                height: 100dvh; /* Dynamic viewport height pour mobile */
+                overflow-y: auto;
+                scroll-behavior: smooth;
+            }
+            
+            .input-line {
+                position: sticky;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(10px);
+                padding: 10px 0;
+                margin-bottom: 0;
+                z-index: 100;
+            }
+            
+            .command-history {
+                padding-bottom: 80px; /* Espace pour l'input sticky */
+                scroll-behavior: smooth;
+            }
+        }
+
+        /* Support iOS Safari pour le clavier */
+        @supports (padding: max(0px)) {
+            @media screen and (max-width: 768px) {
+                .input-line {
+                    padding-bottom: max(10px, env(safe-area-inset-bottom));
+                }
             }
         }
     </style>
 </head>
 <body>
     <div class="crt-screen">
-        <div class="scan-line"></div>
         <div class="static-noise"></div>
         <div class="snow-overlay"></div>
         <div class="interference-lines"></div>
+        <div class="tv-snow"></div>
         <div class="terminal">
             <div class="terminal-header">
-                <div class="glitch" data-text="SAUMON TERMINAL v1.1.0">SAUMON TERMINAL v1.1.0</div>
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.1">SAUMON TERMINAL v1.1.1</div>
                 <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
             </div>
             
-            <div class="boot-sequence">
-                <div class="boot-line">Initializing system...</div>
-                <div class="boot-line">Loading kernel modules... [OK]</div>
-                <div class="boot-line">Starting network services... [OK]</div>
-                <div class="boot-line">Mounting filesystems... [OK]</div>
-                <div class="boot-line">System ready.</div>
-            </div>
-
             <div class="command-history" id="command-history">
+                <div class="boot-sequence">
+                    <div class="boot-line">Initializing system...</div>
+                    <div class="boot-line">Loading kernel modules... [OK]</div>
+                    <div class="boot-line">Starting network services... [OK]</div>
+                    <div class="boot-line">Mounting filesystems... [OK]</div>
+                    <div class="boot-line">System ready.</div>
+                </div>
             </div>
 
             <div class="input-line">
-                <input type="text" class="command-input" id="command-input" autofocus disabled>
+                <input type="text" class="command-input" id="command-input" autofocus disabled 
+                       autocomplete="off" 
+                       autocorrect="off" 
+                       autocapitalize="off" 
+                       spellcheck="false"
+                       inputmode="text">
                 <div class="cursor"></div>
             </div>
         </div>
@@ -730,7 +916,7 @@
             isLoginMode = true;
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+                <div style="display: flex; justify-content: center; align-items: flex-start; height: 100vh; padding-top: min(10vh, 60px);">
                     <div class="login-box">
                         <div class="login-header">LOGIN</div>
                         <div class="login-content">
@@ -741,7 +927,10 @@
                         </div>
                     </div>
                 </div>
-                <input type="password" id="password-input" maxlength="10" style="position: absolute; left: -9999px;" autofocus>
+                <input type="password" id="password-input" maxlength="10" 
+                       style="position: absolute; left: -9999px; opacity: 0;" 
+                       autocomplete="current-password"
+                       inputmode="text">
             `;
             
             // Attendre que le DOM soit mis à jour
@@ -759,19 +948,29 @@
             
             if (!passwordInput || !passwordDisplay || !cursorLogin) return;
             
-            // Fonction pour maintenir le focus sur l'input de mot de passe
+            // Configurer les attributs pour éviter l'interférence mobile
+            passwordInput.setAttribute('autocomplete', 'current-password');
+            passwordInput.setAttribute('autocorrect', 'off');
+            passwordInput.setAttribute('autocapitalize', 'off');
+            passwordInput.setAttribute('spellcheck', 'false');
+            
+            // Fonction pour maintenir le focus sur l'input de mot de passe (uniquement en mode login)
             function maintainFocus() {
-                if (isLoginMode && passwordInput) {
-                    passwordInput.focus();
+                if (isLoginMode && passwordInput && document.activeElement !== passwordInput) {
+                    // Petit délai pour éviter les conflits avec les événements mobiles
+                    setTimeout(() => {
+                        if (isLoginMode) {
+                            passwordInput.focus();
+                        }
+                    }, 50);
                 }
             }
             
-            // Gestionnaires pour maintenir le focus
+            // Gestionnaires pour maintenir le focus (moins agressifs sur mobile)
             document.addEventListener('click', maintainFocus);
-            document.addEventListener('focusin', maintainFocus);
             passwordInput.addEventListener('blur', function() {
-                // Petit délai pour permettre à d'autres événements de se déclencher
-                setTimeout(maintainFocus, 10);
+                // Délai plus long pour permettre aux événements mobiles de se stabiliser
+                setTimeout(maintainFocus, 100);
             });
             
             // Fonction pour mettre à jour l'affichage du mot de passe
@@ -839,19 +1038,18 @@
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
                 <div class="terminal-header">
-                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.0">SAUMON TERMINAL v1.1.0</div>
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.1">SAUMON TERMINAL v1.1.1</div>
                     <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
                 </div>
                 
-                <div class="boot-sequence">
-                    <div class="boot-line">Initializing system...</div>
-                    <div class="boot-line">Loading kernel modules... [OK]</div>
-                    <div class="boot-line">Starting network services... [OK]</div>
-                    <div class="boot-line">Mounting filesystems... [OK]</div>
-                    <div class="boot-line">System ready.</div>
-                </div>
-
                 <div class="command-history" id="command-history">
+                    <div class="boot-sequence">
+                        <div class="boot-line">Initializing system...</div>
+                        <div class="boot-line">Loading kernel modules... [OK]</div>
+                        <div class="boot-line">Starting network services... [OK]</div>
+                        <div class="boot-line">Mounting filesystems... [OK]</div>
+                        <div class="boot-line">System ready.</div>
+                    </div>
                 </div>
 
                 <div class="input-line">
@@ -878,6 +1076,14 @@
             const newCursor = document.querySelector('.cursor');
             
             if (!newCommandInput) return;
+            
+            // Configurer les attributs pour mobile
+            newCommandInput.setAttribute('type', 'text');
+            newCommandInput.setAttribute('autocomplete', 'off');
+            newCommandInput.setAttribute('autocorrect', 'off');
+            newCommandInput.setAttribute('autocapitalize', 'off');
+            newCommandInput.setAttribute('spellcheck', 'false');
+            newCommandInput.setAttribute('inputmode', 'text');
             
             // Mettre à jour les références globales
             commandInput = newCommandInput;
@@ -954,6 +1160,26 @@
 
             updateCursorPosition();
             newCommandInput.focus(); // S'assurer que le focus est sur l'input
+            
+            // Gestion du scroll mobile pour le clavier
+            function scrollToPrompt() {
+                if (window.innerWidth <= 768) { // Sur mobile/tablette
+                    setTimeout(() => {
+                        const inputLine = document.querySelector('.input-line');
+                        if (inputLine) {
+                            inputLine.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                            });
+                        }
+                    }, 300); // Délai pour laisser le clavier s'ouvrir
+                }
+            }
+            
+            // Événements pour gérer le clavier mobile
+            newCommandInput.addEventListener('focus', scrollToPrompt);
+            newCommandInput.addEventListener('touchstart', scrollToPrompt);
         }
 
         // Gestion de la saisie
@@ -1021,15 +1247,15 @@
                     <div>Available commands:</div>
                     <div class="help-commands">
                         <div class="help-command">
-                            <span class="cmd-name">PASSAGEDUGOIS</span>
+                            <span class="cmd-name">GOIS</span>
                             <span class="cmd-desc">open 'Passage du Gois' project</span>
                         </div>
                         <div class="help-command">
-                            <span class="cmd-name">GITKTTI</span>
+                            <span class="cmd-name">GIT</span>
                             <span class="cmd-desc">open 'GitKtti™' project</span>
                         </div>
                         <div class="help-command">
-                            <span class="cmd-name">FARTSIM</span>
+                            <span class="cmd-name">FART</span>
                             <span class="cmd-desc">open 'Fart Simulator' repo</span>
                         </div>
                         <div class="help-command">
@@ -1046,15 +1272,15 @@
                         </div>
                     </div>
                 `;
-            } else if (command.toLowerCase() === 'passagedugois') {
+            } else if (command.toLowerCase() === 'gois') {
                 playBeep();
                 window.open('https://saumon.github.io/fr.passagedugois.app/', '_blank');
-                output.textContent = `Opening passagedugois...`;
-            } else if (command.toLowerCase() === 'gitktti') {
+                output.textContent = `Opening passage du gois...`;
+            } else if (command.toLowerCase() === 'git') {
                 playBeep();
                 window.open('https://saumon.github.io/gitktti/', '_blank');
                 output.textContent = `Opening gitktti...`;
-            } else if (command.toLowerCase() === 'fartsim') {
+            } else if (command.toLowerCase() === 'fart') {
                 playBeep();
                 window.open('https://github.com/saumon/fartsimulator', '_blank');
                 output.textContent = `Opening fart simulator...`;
@@ -1074,7 +1300,7 @@
                 return; // Sortir de la fonction sans ajouter d'output
             } else {
                 playErrorBeep();
-                output.textContent = `${command}: command not found`;
+                output.textContent = `command not found. Need HELP?`;
             }
             
             commandHistory.appendChild(output);
@@ -1090,7 +1316,22 @@
 
         // Maintenir le focus sur l'input
         document.addEventListener('click', () => {
-            commandInput.focus();
+            if (!isLoginMode) {
+                commandInput.focus();
+                // Scroll vers le prompt sur mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const inputLine = document.querySelector('.input-line');
+                        if (inputLine) {
+                            inputLine.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                            });
+                        }
+                    }, 100);
+                }
+            }
         });
 
         // Positionner le curseur après le texte
@@ -1161,22 +1402,6 @@
                 setTimeout(() => {
                     screen.style.transform = 'scale(1)';
                 }, Math.random() * 200 + 50);
-            }
-        }
-
-        // Nouveau: Effet de lignes de balayage mobiles
-        function scanlineInterference() {
-            const staticNoise = document.querySelector('.static-noise');
-            if (Math.random() < 0.02) {
-                staticNoise.style.opacity = Math.random() * 0.1 + 0.05;
-                staticNoise.style.background = `linear-gradient(${Math.random() * 360}deg, 
-                    transparent ${Math.random() * 30}%, 
-                    rgba(159, 255, 159, ${Math.random() * 0.1}) ${Math.random() * 20 + 40}%, 
-                    transparent ${Math.random() * 30 + 60}%)`;
-                setTimeout(() => {
-                    staticNoise.style.opacity = '0.03';
-                    staticNoise.style.background = 'transparent';
-                }, Math.random() * 100 + 50);
             }
         }
 
@@ -1274,43 +1499,85 @@
             }, 500); // Plus fréquent
         }
 
-        // Nouveau: Lignes de brouillage horizontales plus discrètes
-        function createScanlineInterference() {
-            const terminal = document.querySelector('.terminal');
+        // Générateur de neige TV réaliste
+        function createTVSnow() {
+            const tvSnow = document.querySelector('.tv-snow');
+            if (!tvSnow) return;
             
-            function addScanlineGlitch() {
-                if (Math.random() < 0.02) { // Réduit de 5% à 2%
-                    const line = document.createElement('div');
-                    line.style.position = 'fixed';
-                    line.style.left = '0';
-                    line.style.width = '100%';
-                    line.style.height = Math.random() * 2 + 0.5 + 'px'; // Plus fin
-                    line.style.top = Math.random() * window.innerHeight + 'px';
-                    line.style.background = `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.1})`; // Plus transparent
-                    line.style.zIndex = '1004';
-                    line.style.pointerEvents = 'none';
-                    line.style.mixBlendMode = 'difference';
-                    
-                    document.body.appendChild(line);
-                    
-                    // Supprimer après un délai plus court
-                    setTimeout(() => {
-                        if (line.parentNode) {
-                            line.parentNode.removeChild(line);
-                        }
-                    }, Math.random() * 80 + 30); // Plus court
+            let snowActive = true;
+            
+            function generateSnowPattern() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 200;
+                canvas.height = 200;
+                
+                const imageData = ctx.createImageData(canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Densité de neige réduite
+                const snowDensity = Math.random() * 0.15 + 0.08; // Entre 8% et 23% des pixels (réduit)
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    if (Math.random() < snowDensity) {
+                        const brightness = Math.random() * 255;
+                        const alpha = Math.random() * 0.6 + 0.2; // Entre 0.2 et 0.8 (moins intense)
+                        
+                        data[i] = brightness;     // Rouge
+                        data[i + 1] = brightness; // Vert
+                        data[i + 2] = brightness; // Bleu
+                        data[i + 3] = Math.min(255, alpha * 255); // Alpha (limité à 255)
+                    } else {
+                        // Pixel transparent
+                        data[i] = 0;
+                        data[i + 1] = 0;
+                        data[i + 2] = 0;
+                        data[i + 3] = 0;
+                    }
                 }
+                
+                ctx.putImageData(imageData, 0, 0);
+                return canvas.toDataURL();
             }
             
-            // Timing plus aléatoire
-            function scheduleNextGlitch() {
-                setTimeout(() => {
-                    addScanlineGlitch();
-                    scheduleNextGlitch();
-                }, Math.random() * 300 + 100); // Entre 100 et 400ms
+            function updateSnow() {
+                if (!snowActive) return;
+                
+                if (Math.random() < 0.85) { // 85% de chance de mise à jour (moins fréquent)
+                    const dataUrl = generateSnowPattern();
+                    tvSnow.style.backgroundImage = `url(${dataUrl})`;
+                    tvSnow.style.backgroundSize = `${Math.random() * 20 + 80}px ${Math.random() * 20 + 80}px`;
+                    tvSnow.style.backgroundRepeat = 'repeat';
+                }
+                
+                // Timing plus lent pour effet de neige plus doux
+                const nextUpdate = Math.random() * 40 + 25; // Entre 25 et 65ms (plus lent)
+                setTimeout(updateSnow, nextUpdate);
             }
             
-            scheduleNextGlitch();
+            // Démarrer l'effet
+            updateSnow();
+            
+            // Pauses occasionnelles de la neige (moins fréquentes)
+            setInterval(() => {
+                if (Math.random() < 0.02) { // 2% de chance (réduit pour plus de continuité)
+                    snowActive = false;
+                    tvSnow.style.backgroundImage = 'none';
+                    setTimeout(() => {
+                        snowActive = true;
+                    }, Math.random() * 150 + 50); // Pause plus courte
+                }
+            }, 3000); // Moins fréquent
+            
+            // Variations d'intensité plus douces
+            setInterval(() => {
+                if (Math.random() < 0.12) { // 12% de chance (moins fréquent)
+                    tvSnow.style.opacity = Math.random() * 0.15 + 0.06; // Entre 0.06 et 0.21 (moins intense)
+                    setTimeout(() => {
+                        tvSnow.style.opacity = '0.10'; // Opacité par défaut réduite
+                    }, Math.random() * 300 + 200); // Durée plus longue
+                }
+            }, 800); // Moins fréquent
         }
 
         // Effet de brouillage dynamique plus subtil
@@ -1354,7 +1621,6 @@
 
         setInterval(addNoise, 30); // Plus fréquent
         setInterval(crtDistortion, 200); // Plus fréquent
-        setInterval(scanlineInterference, 150); // Nouveau effet
         setInterval(colorArtifacts, 400); // Nouveau effet moins fréquent
         setInterval(analogInterference, 150); // Moins fréquent pour plus de subtilité
         setInterval(receptionInterference, 500); // Parasites plus fréquents
@@ -1368,7 +1634,7 @@
         function initializeBootSequence() {
             // Démarrer les effets de brouillage analogique
             createAnalogNoise();
-            createScanlineInterference();
+            createTVSnow();
             
             // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
             setTimeout(() => {
@@ -1387,6 +1653,80 @@
         } else {
             // Document déjà chargé
             initializeBootSequence();
+        }
+
+        // Auto-scroll pendant le boot pour mobile
+        function ensureBootScroll() {
+            if (window.innerWidth <= 768) { // Sur mobile
+                const commandHistory = document.querySelector('.command-history');
+                const terminal = document.querySelector('.terminal');
+                
+                if (commandHistory) {
+                    // Scroller vers le bas du command-history (qui contient le boot)
+                    commandHistory.scrollTop = commandHistory.scrollHeight;
+                }
+                if (terminal) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            }
+        }
+
+        // Observer les changements dans le command-history pour auto-scroll
+        if (window.innerWidth <= 768) {
+            const bootObserver = new MutationObserver(() => {
+                ensureBootScroll();
+            });
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                const commandHistory = document.querySelector('.command-history');
+                if (commandHistory) {
+                    bootObserver.observe(commandHistory, { 
+                        childList: true, 
+                        subtree: true 
+                    });
+                }
+            });
+            
+            // Auto-scroll périodique pendant le boot
+            const bootScrollInterval = setInterval(() => {
+                if (isBootLoading) {
+                    ensureBootScroll();
+                } else {
+                    clearInterval(bootScrollInterval);
+                }
+            }, 100);
+        }
+
+        // Gestion avancée du clavier mobile
+        let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        
+        function handleViewportChange() {
+            if (window.visualViewport) {
+                const currentHeight = window.visualViewport.height;
+                const heightDifference = initialViewportHeight - currentHeight;
+                
+                // Si la hauteur a diminué de plus de 150px, le clavier est probablement ouvert
+                if (heightDifference > 150) {
+                    setTimeout(() => {
+                        const inputLine = document.querySelector('.input-line');
+                        if (inputLine && !isLoginMode) {
+                            inputLine.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                            });
+                        }
+                    }, 100);
+                }
+            }
+        }
+        
+        // Écouter les changements de viewport (clavier mobile)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+        } else {
+            // Fallback pour les navigateurs plus anciens
+            window.addEventListener('resize', handleViewportChange);
         }
     </script>
 </body>
