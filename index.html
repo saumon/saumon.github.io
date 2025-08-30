@@ -526,6 +526,11 @@
             animation: blink 1s infinite;
         }
 
+        .cursor.hidden {
+            opacity: 0;
+            animation: none;
+        }
+
         @keyframes fadeIn {
             to {
                 opacity: 1;
@@ -885,7 +890,7 @@
         <div class="tv-snow"></div>
         <div class="terminal">
             <div class="terminal-header">
-                <div class="glitch" data-text="SAUMON TERMINAL v1.1.4">SAUMON TERMINAL v1.1.4</div>
+                <div class="glitch" data-text="SAUMON TERMINAL v1.1.5">SAUMON TERMINAL v1.1.5</div>
                 <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
             </div>
             
@@ -897,7 +902,7 @@
                        autocapitalize="off" 
                        spellcheck="false"
                        inputmode="text">
-                <div class="cursor"></div>
+                <div class="cursor hidden"></div>
             </div>
             
             <!-- Historique des commandes qui défile vers le bas -->
@@ -1098,14 +1103,14 @@
             const terminal = document.querySelector('.terminal');
             terminal.innerHTML = `
                 <div class="terminal-header">
-                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.4">SAUMON TERMINAL v1.1.4</div>
+                    <div class="glitch" data-text="SAUMON TERMINAL v1.1.5">SAUMON TERMINAL v1.1.5</div>
                     <div>Copyright (C) 2025 Saumon Corporation. All rights reserved.</div>
                 </div>
                 
                 <!-- Prompt en haut, juste après le header -->
                 <div class="input-line">
                     <input type="text" class="command-input" id="command-input" autofocus disabled maxlength="20">
-                    <div class="cursor"></div>
+                    <div class="cursor hidden"></div>
                 </div>
                 
                 <!-- Historique des commandes qui défile vers le bas -->
@@ -1123,6 +1128,12 @@
             // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
             setTimeout(() => {
                 isBootLoading = false;
+
+                // Afficher le curseur
+                const cursor = document.querySelector('.cursor');
+                if (cursor) {
+                    cursor.classList.remove('hidden');
+                }
                 
                 // Masquer la séquence de boot avec animation fluide
                 const bootSequence = document.querySelector('.boot-sequence');
@@ -1793,6 +1804,12 @@
             // Attendre la fin de l'animation de boot (5 lignes * 0.4s délai + 1s supplémentaire)
             setTimeout(() => {
                 isBootLoading = false;
+
+                // Afficher le curseur
+                const cursor = document.querySelector('.cursor');
+                if (cursor) {
+                    cursor.classList.remove('hidden');
+                }
                 
                 // Masquer la séquence de boot avec animation fluide
                 const bootSequence = document.querySelector('.boot-sequence');
