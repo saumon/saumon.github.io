@@ -122,6 +122,9 @@
   </style>
 </head>
 <body id="app-body">
+  <!-- Input caché pour iOS Safari fallback -->
+  <input id="ios-keyboard-helper" type="text" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" readonly>
+  
   <script>
     // Détection d'iOS Safari
     function isIOSSafari() {
@@ -178,6 +181,52 @@
     if ('virtualKeyboard' in navigator) {
       navigator.virtualKeyboard.overlaysContent = true;
     }
+    
+    // Force l'activation du clavier sur iOS Safari
+    function forceKeyboardActivation() {
+      if (isIOSSafari()) {
+        // Créer un input temporaire pour activer le clavier
+        const tempInput = document.createElement('input');
+        tempInput.type = 'text';
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        tempInput.style.opacity = '0';
+        tempInput.style.pointerEvents = 'none';
+        tempInput.setAttribute('readonly', 'readonly');
+        
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        
+        setTimeout(() => {
+          tempInput.blur();
+          document.body.removeChild(tempInput);
+        }, 100);
+      }
+    }
+    
+    // Activer le clavier lors du premier touch sur iOS
+    let firstTouch = true;
+    document.addEventListener('touchstart', function(e) {
+      if (isIOSSafari() && firstTouch) {
+        firstTouch = false;
+        forceKeyboardActivation();
+      }
+    }, { once: true });
+    
+    // Ajouter un gestionnaire global pour l'activation du clavier
+    document.addEventListener('click', function(e) {
+      if (isIOSSafari()) {
+        // Petite pause pour laisser Flutter traiter l'événement
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('input, textarea');
+          inputs.forEach(input => {
+            if (input.offsetParent !== null) { // visible
+              input.focus();
+            }
+          });
+        }, 50);
+      }
+    });
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
