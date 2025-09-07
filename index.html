@@ -182,6 +182,97 @@
       navigator.virtualKeyboard.overlaysContent = true;
     }
     
+    // Native input system for iOS Safari
+    let nativeInput = null;
+    let flutterInputCallback = null;
+    
+    window.setupNativeInput = function(callback) {
+      if (!isIOSSafari()) return false;
+      
+      flutterInputCallback = callback;
+      
+      if (nativeInput) {
+        document.body.removeChild(nativeInput);
+      }
+      
+      nativeInput = document.createElement('input');
+      nativeInput.type = 'text';
+      nativeInput.autocomplete = 'off';
+      nativeInput.autocorrect = 'off';
+      nativeInput.autocapitalize = 'none';
+      nativeInput.spellcheck = false;
+      nativeInput.style.cssText = `
+        position: fixed;
+        left: 20px;
+        bottom: 80px;
+        width: calc(100% - 40px);
+        height: 44px;
+        font-size: 16px;
+        font-family: 'Courier Prime', monospace;
+        background: rgba(0, 20, 0, 0.9);
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        border-radius: 4px;
+        padding: 10px;
+        z-index: 10000;
+        display: none;
+        outline: none;
+        -webkit-appearance: none;
+        -webkit-user-select: text;
+        user-select: text;
+      `;
+      nativeInput.placeholder = 'Entrez votre commande...';
+      
+      nativeInput.addEventListener('input', function(e) {
+        if (flutterInputCallback) {
+          flutterInputCallback('INPUT:' + e.target.value);
+        }
+      });
+      
+      nativeInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (flutterInputCallback) {
+            flutterInputCallback('ENTER:' + e.target.value);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (flutterInputCallback) {
+            flutterInputCallback('ESCAPE:');
+          }
+        }
+      });
+      
+      document.body.appendChild(nativeInput);
+      return true;
+    };
+    
+    window.showNativeInput = function(currentText = '') {
+      if (nativeInput && isIOSSafari()) {
+        nativeInput.value = currentText;
+        nativeInput.style.display = 'block';
+        setTimeout(() => {
+          nativeInput.focus();
+          nativeInput.setSelectionRange(nativeInput.value.length, nativeInput.value.length);
+        }, 100);
+        return true;
+      }
+      return false;
+    };
+    
+    window.hideNativeInput = function() {
+      if (nativeInput) {
+        nativeInput.style.display = 'none';
+        nativeInput.blur();
+      }
+    };
+    
+    window.updateNativeInput = function(text) {
+      if (nativeInput) {
+        nativeInput.value = text;
+      }
+    };
+
     // Force l'activation du clavier sur iOS Safari
     function forceKeyboardActivation() {
       if (isIOSSafari()) {
