@@ -25,8 +25,10 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Saumon Terminal">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="format-detection" content="telephone=no">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -121,6 +123,15 @@
 </head>
 <body id="app-body">
   <script>
+    // Détection d'iOS Safari
+    function isIOSSafari() {
+      const ua = navigator.userAgent;
+      const iOS = /iPad|iPhone|iPod/.test(ua);
+      const webkit = /WebKit/.test(ua);
+      const safari = /Safari/.test(ua);
+      return iOS && webkit && safari && !/(CriOS|FxiOS|OPiOS|mercury)/i.test(ua);
+    }
+    
     // Gestion du clavier virtuel sur mobile
     function handleViewportChange() {
       // Forcer le recalcul de la hauteur du viewport
@@ -129,6 +140,26 @@
       
       // Empêcher le scroll indésirable
       document.body.style.height = window.innerHeight + 'px';
+    }
+    
+    // Configuration spécifique iOS Safari
+    if (isIOSSafari()) {
+      // Empêcher le zoom lors du focus sur les inputs
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+        }
+      });
+      
+      // Empêcher le double-tap zoom
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
     }
     
     // Écouter les changements de taille du viewport
