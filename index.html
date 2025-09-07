@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="Terminal rétro avec effets CRT et commandes interactives. Une expérience de terminal nostalgique dans votre navigateur.">
   <meta name="keywords" content="terminal, retro, CRT, command line, saumon, vintage, console">
   <meta name="author" content="Saumon">
@@ -36,31 +36,118 @@
   <link rel="manifest" href="manifest.json">
   
   <style>
-    /* Prévenir le zoom et stabiliser l'affichage mobile */
-    html, body {
+    /* Gestion optimisée du clavier virtuel mobile */
+    html {
       margin: 0;
       padding: 0;
-      overflow: hidden;
       background-color: #000000;
-      height: 100vh;
-      width: 100vw;
+      /* Support pour les nouvelles unités viewport dynamique */
+      height: 100dvh;
+      width: 100dvw;
+      overflow: hidden;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      height: 100dvh;
+      width: 100dvw;
+      overflow: hidden;
       position: fixed;
+      top: 0;
+      left: 0;
+      /* Prévenir le bounce sur iOS */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: none;
+    }
+    
+    /* Configuration spécifique pour le clavier virtuel */
+    @supports (height: 100dvh) {
+      html, body {
+        height: 100dvh; /* Dynamic viewport height - s'adapte au clavier */
+      }
+    }
+    
+    /* Fallback pour navigateurs sans support dvh */
+    @supports not (height: 100dvh) {
+      html, body {
+        height: calc(var(--vh, 1vh) * 100);
+      }
     }
     
     /* Prévenir les comportements indésirables du clavier sur mobile */
     input, textarea {
       font-size: 16px !important; /* Prévenir le zoom automatique sur iOS */
+      -webkit-user-select: text;
+      user-select: text;
     }
     
-    /* Assurer que Flutter occupe tout l'espace */
+    /* Container principal Flutter */
     #app-body {
-      height: 100vh;
-      width: 100vw;
+      height: 100%;
+      width: 100%;
       background-color: #000000;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Assurer que Flutter s'affiche par-dessus tout */
+    flutter-view {
+      height: 100% !important;
+      width: 100% !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      background-color: #000000 !important;
+    }
+    
+    /* Masquer toute barre de défilement sur mobile */
+    ::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    
+    /* Styles spécifiques iOS */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        /* Prévenir le rebond sur iOS */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: none;
+      }
     }
   </style>
 </head>
 <body id="app-body">
+  <script>
+    // Gestion du clavier virtuel sur mobile
+    function handleViewportChange() {
+      // Forcer le recalcul de la hauteur du viewport
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      
+      // Empêcher le scroll indésirable
+      document.body.style.height = window.innerHeight + 'px';
+    }
+    
+    // Écouter les changements de taille du viewport
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', handleViewportChange);
+    
+    // Initialisation
+    handleViewportChange();
+    
+    // Prévenir le comportement de défilement sur mobile
+    document.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+    
+    // Gérer spécifiquement le clavier virtuel (API moderne)
+    if ('virtualKeyboard' in navigator) {
+      navigator.virtualKeyboard.overlaysContent = true;
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
