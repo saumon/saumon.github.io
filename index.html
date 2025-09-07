@@ -18,6 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Terminal rétro avec effets CRT et commandes interactives. Une expérience de terminal nostalgique dans votre navigateur.">
   <meta name="keywords" content="terminal, retro, CRT, command line, saumon, vintage, console">
   <meta name="author" content="Saumon">
@@ -33,8 +34,33 @@
 
   <title>Saumon Terminal - Terminal Rétro</title>
   <link rel="manifest" href="manifest.json">
+  
+  <style>
+    /* Prévenir le zoom et stabiliser l'affichage mobile */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000000;
+      height: 100vh;
+      width: 100vw;
+      position: fixed;
+    }
+    
+    /* Prévenir les comportements indésirables du clavier sur mobile */
+    input, textarea {
+      font-size: 16px !important; /* Prévenir le zoom automatique sur iOS */
+    }
+    
+    /* Assurer que Flutter occupe tout l'espace */
+    #app-body {
+      height: 100vh;
+      width: 100vw;
+      background-color: #000000;
+    }
+  </style>
 </head>
-<body>
+<body id="app-body">
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
